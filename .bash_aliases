@@ -116,3 +116,4 @@ tmux-dev () {
   #send-keys 'top' C-m \;
 }
 alias tmd="tmux-dev"
+alias tm="GNOME_TERMINAL_SCREEN='' gnome-terminal >/dev/null 2>&1"
