@@ -87,25 +87,32 @@ ex () {
     esac
   elif [ "$1" == "-help" ] || [ "$1" == "--help" ] || [ "$1" == "-h" ]; then
     echo "Usage: ex <file>"
-    echo "Supported archives:" 
+    echo "Supported archives:"
     echo "    tar.bz2, tar.gz, bz2, rar, gz, tar, tbz2, tgz, zip, Z, 7z"
   else
     echo "Unkown argument. Try -h"
   fi
 }
 
-alias sd="systemctl"
+alias p="sudo pacman"
+alias a="sudo apt"
+
+alias SS="sudo systemctl"
+alias ssn="sudo shutdown -h now"
+alias srn="sudo reboot -h now"
 
 alias hs="history | tail -30"
 alias ghis="history|grep"
 
+alias ls="ls -hN --color=auto --group-directories-first"
 alias ll='ls -l'
 alias l='ll'
 alias lll='ll'
+
 alias nau='nautilus . &'
+
 # --------------------------------------
-alias format-rst="/home/dalo/Documents/dotfiles/scripts/format-rst-files.sh"
-alias v="nvim"
+alias format-rst="~/.dotfiles/scripts/format-rst-files.sh"
 
 tmux-dev () {
   tmux new-session \; \
@@ -117,3 +124,10 @@ tmux-dev () {
 }
 alias tmd="tmux-dev"
 alias tm="GNOME_TERMINAL_SCREEN='' gnome-terminal >/dev/null 2>&1"
+
+__git_ps1() { git branch 2>/dev/null | sed -n 's/* \(.*\)/ \1/p'; }
+export PS1='\[\e[0;91m\][\[\e[0;93m\]\u\[\e[0;92m\]@\[\e[0;38;5;32m\]\h \[\e[0;38;5;207m\]\w\[\e[0m\]$( __git_ps1 )\[\e[0;91m\]]\[\e[0;1m\]$ \[\e[0m\]'
+
+pac-orph(){
+  sudo sh -c 'orphan=$(pacman -Qtdq); [ -z $orphan ] && exit 0 || pacman -Rns $orphan'
+}
