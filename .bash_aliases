@@ -126,7 +126,7 @@ alias tmd="tmux-dev"
 alias tm="GNOME_TERMINAL_SCREEN='' gnome-terminal >/dev/null 2>&1"
 
 __git_ps1() { git branch 2>/dev/null | sed -n 's/* \(.*\)/ \1/p'; }
-export PS1='\[\e[0;91m\][\[\e[0;93m\]\u\[\e[0;92m\]@\[\e[0;38;5;32m\]\h \[\e[0;38;5;207m\]\w\[\e[0m\]$( __git_ps1 )\[\e[0;91m\]]\[\e[0;1m\]$ \[\e[0m\]'
+export PS1='\[\e[0;91m\][\[\e[0;93m\]\u\[\e[0;92m\]@\[\e[0;38;5;32m\]\h \[\e[0;38;5;207m\]\w\[\e[0m\]$(__git_ps1)\[\e[0;91m\]]\[\e[0;1m\]$ \[\e[0m\]'
 
 pac-orph(){
   sudo sh -c 'orphan=$(pacman -Qtdq); [ -z $orphan ] && exit 0 || pacman -Rns $orphan'
