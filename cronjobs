@@ -1,0 +1,6 @@
+[root]
+# Only download to be updated packages
+# every 2h05m
+## 5m because of interference of other pacman stuff
+5 */2 * * * /usr/bin/pacman -Syuw --noconfirm
+*/30 * * * * /usr/bin/updatedb
