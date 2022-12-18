@@ -1,6 +1,7 @@
-# if [ -f ~/.bash_aliases ]; then
-#    . ~/.bash_aliases
-# fi
+# [[ -f ~/.bash_aliases ]] && . ~/.bash_aliases
+
+HISTSIZE=10000000
+SAVEHIST=10000000
 
 # specific commands for git
 alias gitlo="git log --oneline"
