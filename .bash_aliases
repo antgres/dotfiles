@@ -105,7 +105,7 @@ alias srn="sudo reboot -h now"
 alias hs="history | tail -30"
 alias ghis="history|grep"
 
-alias ls="ls -hN --color=auto --group-directories-first"
+alias ls="ls -hN -v --color=auto --group-directories-first"
 alias ll='ls -l'
 alias l='ll'
 alias lll='ll'
