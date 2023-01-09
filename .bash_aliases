@@ -112,6 +112,8 @@ alias lll='ll'
 
 alias nau='nautilus . &'
 
+alias et="emacs -nw"
+
 # --------------------------------------
 alias format-rst="~/.dotfiles/scripts/format-rst-files.sh"
 
