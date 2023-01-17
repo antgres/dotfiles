@@ -3,6 +3,13 @@
 HISTSIZE=10000000
 SAVEHIST=10000000
 
+# Preserve bash history in multiple terminal windows
+HISTCONTROL=ignoredups:erasedups # Avoid duplicates
+shopt -s histappend # if shell exists, append to history file
+
+# After each command, append to the history file and reread it
+PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND$'\n'}history -a; history -c; history -r"
+
 # specific commands for git
 alias gitlo="git log --oneline"
 alias gitsta="git diff --cached"
