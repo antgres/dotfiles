@@ -104,6 +104,7 @@ ex () {
 
 alias p="sudo pacman"
 alias a="sudo apt"
+alias au="sudo sh -c 'apt update && echo \"New software:\n\" && apt list --upgradable'"
 
 alias SS="sudo systemctl"
 alias ssn="sudo shutdown -h now"
