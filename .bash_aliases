@@ -1,22 +1,30 @@
 # [[ -f ~/.bash_aliases ]] && . ~/.bash_aliases
 
+# change bash_history to save more entries
 HISTSIZE=10000000
 SAVEHIST=10000000
 
 # Preserve bash history in multiple terminal windows
 HISTCONTROL=ignoredups:erasedups # Avoid duplicates
 shopt -s histappend # if shell exists, append to history file
-
 # After each command, append to the history file and reread it
 PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND$'\n'}history -a; history -c; history -r"
 
-# specific commands for git
+# see log as oneliner
 alias gitlo="git log --oneline"
+# see diff of staged commits
 alias gitsta="git diff --cached"
-alias gitrm="git checkout --"
-alias gitre="git reset HEAD~"
+# reword the last commit
+alias gitrew="git commit --amend --edit"
+# remove all unstaged changes in repo
+alias gitrm="git checkout -- ."
+# remove last commit from log
+alias gitres="git reset HEAD~"
+# rebase log interactivly
 alias gitri="git rebase -i"
+# add hunks of a file
 alias gitap="git add -p"
+# show history of moving HEAD, more info with --pretty=short
 alias githis="git reflog --relative-date"
 alias gitchy="git cherry-pick"
 # Usage: gitemail -v4 --to email@email.de --in-reply-to 424242422442000-email@.de 3a55fcd^
@@ -24,8 +32,11 @@ alias gitemail="git send-email --cover-letter --cc review@linutronix.de --no-cha
 alias gitemail-dev="git send-email --cover-letter --no-chain-reply-to --annotate"
 # create orphan branch. Usage: gitorph NEW-BRANCH
 alias gitorph="git checkout --orphan"
-# delete root commit (last commit in branch). Usage: gitdelroot
+# delete root commit (last commit in branch)
 alias gitdelroot="git update-ref -d HEAD"
+# cautious: clean all changes, dry run with -n option
+alias gitmrclean="git clean -fd"
+
 # show log with -L option
 gitloli() {
   # Use: gitloli FILE LINE
@@ -42,9 +53,9 @@ gitloli() {
     echo "Wrong amount of inputs."
   fi
 }
-# adds reviwed-by to n commits
+# append reviewed-by until HASH
 gitrb() {
-  # Usage: git-rb "Max Mustermann" "max@mustermann.de" <HASH>
+  # Usage: gitrb "Max Mustermann" "max@mustermann.de" <HASH>
 
   export who="$1"
   export mail="$2"
@@ -71,7 +82,7 @@ gitremember(){
 # -------------------------------------
 splitsen () {
   # Cut line after X chars
-  echo $1 | sed 's/./&\n/74'
+  echo $1 | sed 's/./&\n/80'
 }
 
 # # from Manjaro .bashrc
@@ -104,19 +115,24 @@ ex () {
 
 alias p="sudo pacman"
 alias a="sudo apt"
-alias au="sudo sh -c 'apt update && echo \"New software:\n\" && apt list --upgradable'"
+alias au="sudo sh -c 'apt update && apt list --upgradable'"
 
 alias SS="sudo systemctl"
 alias ssn="sudo shutdown -h now"
 alias srn="sudo reboot -h now"
 
 alias hs="history | tail -30"
-alias ghis="history|grep"
+alias ghis="history | grep"
 
 alias ls="ls -hN -v --color=auto --group-directories-first"
 alias ll='ls -l'
 alias l='ll'
 alias lll='ll'
+
+# start at the end of the file
+alias lesend="less +G"
+# start at the end of file and continually load new content
+alias lesendf="less +F"
 
 alias nau='nautilus . &'
 
@@ -134,10 +150,14 @@ tmux-dev () {
   #send-keys 'top' C-m \;
 }
 alias tmd="tmux-dev"
+## open correctly a new terminal screen and session
 alias tm="GNOME_TERMINAL_SCREEN='' gnome-terminal >/dev/null 2>&1"
 
 __git_ps1() { git branch 2>/dev/null | sed -n 's/* \(.*\)/ \1/p'; }
-export PS1='\[\e[0;91m\][\[\e[0;93m\]\u\[\e[0;92m\]@\[\e[0;38;5;32m\]\h \[\e[0;38;5;207m\]\w\[\e[0m\]$(__git_ps1)\[\e[0;91m\]]\[\e[0;1m\]$ \[\e[0m\]'
+export PS1='\[\e[0;91m\][\[\e[0;93m\]\u\[\e[0;92m\]@\[\e[0;38;5;32m\]\h \[\e[0;38;5;207m\]\w\[\e[0m\]$(__git_ps1)\[\e[0;91m\]]\[\e[0;1m\]\n$ \[\e[0m\]'
+
+## trims the path expect the x latest
+# export PROMPT_DIRTRIM=2
 
 pac-orph(){
   sudo sh -c 'orphan=$(pacman -Qtdq); [ -z $orphan ] && exit 0 || pacman -Rns $orphan'
