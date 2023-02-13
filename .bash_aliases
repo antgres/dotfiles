@@ -10,6 +10,9 @@ shopt -s histappend # if shell exists, append to history file
 # After each command, append to the history file and reread it
 PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND$'\n'}history -a; history -c; history -r"
 
+# !! root commit
+# ! if only a single commit (root commit) is commited or one wants the root
+# ! commit oen should use the flag *--root* instead of $SHA.
 # see log as oneliner
 alias gitlo="git log --oneline"
 # see diff of staged commits
@@ -81,9 +84,18 @@ gitremember(){
 }
 # -------------------------------------
 splitsen () {
-  # Cut line after X chars
-  echo $1 | sed 's/./&\n/80'
+  # Cut line after around 78 chars
+  # recommended in
+  # https://people.kernel.org/tglx/notes-about-netiquette
+  echo $1 | sed 's/./&\n/78'
 }
+
+cd_up() {
+  # jump from nested child into upper folder
+  # ex. cd ../../.. -> cd.. 3
+  cd $(printf "%0.s../" $(seq 1 $1 ));
+}
+alias 'cd..'='cd_up'
 
 # # from Manjaro .bashrc
 # # ex - archive extractor
@@ -119,7 +131,7 @@ alias au="sudo sh -c 'apt update && apt list --upgradable'"
 
 alias SS="sudo systemctl"
 alias ssn="sudo shutdown -h now"
-alias srn="sudo reboot -h now"
+alias srn="sudo reboot"
 
 alias hs="history | tail -30"
 alias ghis="history | grep"
@@ -133,6 +145,10 @@ alias lll='ll'
 alias lesend="less +G"
 # start at the end of file and continually load new content
 alias lesendf="less +F"
+
+# shred the file by overwriting with random data,
+# then zeros and lastly deleting
+alias shredd="shred -v -n 1 -z -u"
 
 alias nau='nautilus . &'
 
