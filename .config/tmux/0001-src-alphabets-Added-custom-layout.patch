@@ -1,0 +1,35 @@
+From 85d915f849ac7440af451bc98f12b741a787978b Mon Sep 17 00:00:00 2001
+From: Anton Gres <dalo@linutronix.de>
+Date: Thu, 9 Feb 2023 11:35:40 +0100
+Subject: [PATCH] src/alphabets: Add custom layout
+
+Add a custom keyboard layout for plugins/tmux-thumbs/src/alphabets.rs.
+
+Signed-off-by: Anton Gres <dalo@linutronix.de>
+---
+ src/alphabets.rs | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/alphabets.rs b/src/alphabets.rs
+index 25c1040..953c9a0 100644
+--- a/src/alphabets.rs
++++ b/src/alphabets.rs
+@@ -1,6 +1,6 @@
+ use std::collections::HashMap;
+ 
+-const ALPHABETS: [(&'static str, &'static str); 22] = [
++const ALPHABETS: [(&'static str, &'static str); 23] = [
+   ("numeric", "1234567890"),
+   ("abcd", "abcd"),
+   ("qwerty", "asdfqwerzxcvjklmiuopghtybn"),
+@@ -23,6 +23,7 @@ const ALPHABETS: [(&'static str, &'static str); 22] = [
+   ("colemak-homerow", "arstneiodh"),
+   ("colemak-left-hand", "arstqwfpzxcv"),
+   ("colemak-right-hand", "neioluymjhk"),
++  ("custom", "wesdcxyaq"),
+ ];
+ 
+ pub struct Alphabet<'a> {
+-- 
+2.30.2
+
