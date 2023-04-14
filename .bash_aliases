@@ -68,20 +68,38 @@ gitrb() {
   -x 'git commit --amend -m"$(git log --format=%B -n1) $(echo "\nReviewed-by: $who <$mail>")"'
 }
 
-gitremember(){
-  echo "Rebase a commit and ammend changes to it."
-  echo ""
-  echo "1) Rebase to the to be changed commit SHA."
-  echo '    git rebase -i $SHA^'
-  echo "2) Add changes to the commit."
-  echo "3) Add changes (eg. git add -p)"
-  echo "4) Commit changes"
-  echo "  (without changing the existing commit message)"
-  echo "    git commit --amend --no-edit"
-  echo "5) Continue rebasing"
-  echo "    git rebase --continue"
-  echo ""
+gitaddcontinue(){
+  ## How to rebase
+  #
+  # 1) Rebase to the to be changed commit SHA.
+  #       git rebase -i $SHA^
+  # 2) Add changes to the commit.
+  # 3) Add changes (eg. git add -p)
+  # 4) Commit changes without changing the existing
+  #    commit message
+  #       git commit --amend --no-edit
+  # 5) Continue rebasing
+  #       git rebase --continue
+  #
+
+  _gitcontinue(){
+    git add $*
+    git commit --amend --no-edit
+    git rebase --continue
+  }
+
+  # This function is only to be used in a rebase
+  # Amend a file and continue the rebase
+  read -e -p "Add and continue with $* ? (y/n) " answer
+
+  case $answer in
+    y) _gitcontinue $*;;
+    *);;
+  esac
+
 }
+alias gitcon="gitaddcontinue"
+
 # -------------------------------------
 splitsen () {
   # Cut line after around 78 chars
@@ -140,6 +158,21 @@ alias ls="ls -hN -v --color=auto --group-directories-first"
 alias ll='ls -l'
 alias l='ll'
 alias lll='ll'
+
+findbiggestfile(){
+  local root_path=${1:-"/"}
+  local list_size="${2:-50}"
+  sh -x -c "find ${root_path} -xdev -type f -size +100M -exec du -sh {} ';' \
+            | sort -rh | head -n${list_size}"
+}
+findbiggestdirectories(){
+  local root_path=${1:-"/"}
+  local list_size="${2:-20}"
+  sh -x -c "du -h --all --one-file-system ${root_path} | \
+            sort -rh | head -n${list_size}"
+}
+alias fbf="findbiggestfile"
+alias fbd="findbiggestdirectories"
 
 # start at the end of the file
 alias lesend="less +G"
