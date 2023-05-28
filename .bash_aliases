@@ -175,6 +175,19 @@ findbiggestdirectories(){
 alias fbf="findbiggestfile"
 alias fbd="findbiggestdirectories"
 
+trash(){
+  # look up stuff in the trash folder
+  local trash_path="${HOME}/.local/share/Trash/files"
+
+  if [ $# -eq 0 ]; then
+    ll "$trash_path"
+  elif [ $# -eq 1 ]; then
+    local key
+    ll "${trash_path}"/*"$1"*
+  else
+    echo "ERROR Multiple arguments are not supported."
+  fi
+}
 
 ## abbreviations
 ## -------------
