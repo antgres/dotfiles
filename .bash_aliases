@@ -183,7 +183,7 @@ alias lesendf="less +F"
 # then zeros and lastly deleting
 alias shredd="shred -v -n 1 -z -u"
 
-alias nau='nautilus . &'
+alias open='xdg-open . >/dev/null 2>&1 &'
 
 alias et="emacs -nw"
 
