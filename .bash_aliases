@@ -7,12 +7,17 @@ SAVEHIST=10000000
 # Preserve bash history in multiple terminal windows
 HISTCONTROL=ignoredups:erasedups # Avoid duplicates
 shopt -s histappend # if shell exists, append to history file
+
 # After each command, append to the history file and reread it
 PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND$'\n'}history -a; history -c; history -r"
 
+## A whole lot of git
+## ------------------
+
 # !! root commit
 # ! if only a single commit (root commit) is commited or one wants the root
-# ! commit oen should use the flag *--root* instead of $SHA.
+# ! commit use the flag *--root* instead of $SHA.
+
 # see log as oneliner
 alias gitlo="git log --oneline"
 # see diff of staged commits
@@ -56,6 +61,7 @@ gitloli() {
     echo "Wrong amount of inputs."
   fi
 }
+
 # append reviewed-by until HASH
 gitrb() {
   # Usage: gitrb "Max Mustermann" "max@mustermann.de" <HASH>
@@ -100,7 +106,9 @@ gitaddcontinue(){
 }
 alias gitcon="gitaddcontinue"
 
-# -------------------------------------
+
+## simplify more complex commands
+## ------------------------------
 splitsen () {
   # Cut line after around 78 chars
   # recommended in
@@ -115,10 +123,19 @@ cd_up() {
 }
 alias 'cd..'='cd_up'
 
-# # from Manjaro .bashrc
-# # ex - archive extractor
-# # usage: ex <file>
+copy(){
+  # redirect something into the clipboard buffer
+  if [ -f $1 ]; then
+    xclip -sel clip < $1
+  else
+    "$@" | xclip -sel clip
+  fi
+}
+
 ex () {
+  # # from Manjaro .bashrc
+  # # ex - archive extractor
+  # # usage: ex <file>
   if [ -f $1 ] ; then
     case $1 in
       *.tar.bz2)   tar xjf $1   ;;
@@ -143,22 +160,6 @@ ex () {
   fi
 }
 
-alias p="sudo pacman"
-alias a="sudo apt"
-alias au="sudo sh -c 'apt update && apt list --upgradable'"
-
-alias SS="sudo systemctl"
-alias ssn="sudo shutdown -h now"
-alias srn="sudo reboot"
-
-alias hs="history | tail -30"
-alias ghis="history | grep"
-
-alias ls="ls -hN -v --color=auto --group-directories-first"
-alias ll='ls -l'
-alias l='ll'
-alias lll='ll'
-
 findbiggestfile(){
   local root_path=${1:-"/"}
   local list_size="${2:-50}"
@@ -174,6 +175,22 @@ findbiggestdirectories(){
 alias fbf="findbiggestfile"
 alias fbd="findbiggestdirectories"
 
+
+## abbreviations
+## -------------
+
+alias SS="sudo systemctl"
+alias ssn="sudo shutdown -h now"
+alias srn="sudo reboot"
+
+alias hs="history | tail -30"
+alias ghis="history | grep"
+
+alias ls="ls -hN -v --color=auto --group-directories-first"
+alias ll='ls -l'
+alias l='ll'
+alias lll='ll'
+
 # start at the end of the file
 alias lesend="less +G"
 # start at the end of file and continually load new content
@@ -183,12 +200,11 @@ alias lesendf="less +F"
 # then zeros and lastly deleting
 alias shredd="shred -v -n 1 -z -u"
 
-alias open='xdg-open . >/dev/null 2>&1 &'
-
-alias et="emacs -nw"
-
-# --------------------------------------
+## custom abbreviations
+## --------------------
 alias format-rst="~/.dotfiles/scripts/format-rst-files.sh"
+alias ytmp3="yt-dlp -x -f bestaudio --audio-format mp3 --add-metadata\
+             --embed-thumbnail --no-keep-video"
 
 tmux-dev () {
   tmux new-session \; \
@@ -205,9 +221,25 @@ alias tm="GNOME_TERMINAL_SCREEN='' gnome-terminal >/dev/null 2>&1"
 __git_ps1() { git branch 2>/dev/null | sed -n 's/* \(.*\)/ \1/p'; }
 export PS1='\[\e[0;91m\][\[\e[0;93m\]\u\[\e[0;92m\]@\[\e[0;38;5;32m\]\h \[\e[0;38;5;207m\]\w\[\e[0m\]$(__git_ps1)\[\e[0;91m\]]\[\e[0;1m\]\n$ \[\e[0m\]'
 
-## trims the path expect the x latest
-# export PROMPT_DIRTRIM=2
+alias open='xdg-open . >/dev/null 2>&1 &'
+alias v="nvim"
+alias et="emacs -nw"
+
+## package manager
+## ---------------
+
+alias p="sudo pacman"
+alias a="sudo apt"
+alias au="sudo sh -c 'apt update && apt list --upgradable'"
 
 pac-orph(){
+  # get all orphan packages and delete them
   sudo sh -c 'orphan=$(pacman -Qtdq); [ -z $orphan ] && exit 0 || pacman -Rns $orphan'
+}
+
+pacclean(){
+  # https://ostechnix.com/recommended-way-clean-package-cache-arch-linux/
+  # 1) delete the package cache except the latest version
+  # 2) Remove all uninstalled packages
+  sudo sh -c "paccache -rk 1; pacman -Sc"
 }
