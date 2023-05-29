@@ -182,8 +182,8 @@ trash(){
   if [ $# -eq 0 ]; then
     ll "$trash_path"
   elif [ $# -eq 1 ]; then
-    local key
-    ll "${trash_path}"/*"$1"*
+    ll "${trash_path}"/*"$1"* 2>/dev/null ||\
+    echo "WARNING Could not find any file with '$1' in it"
   else
     echo "ERROR Multiple arguments are not supported."
   fi
