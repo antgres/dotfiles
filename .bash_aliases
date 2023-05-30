@@ -230,7 +230,7 @@ alias format-rst="~/.dotfiles/scripts/format-rst-files.sh"
 alias ytmp3="yt-dlp -x -f bestaudio --audio-format mp3 --add-metadata\
              --embed-thumbnail --no-keep-video"
 
-tmux-dev () {
+tmux-dev(){
   tmux new-session \; \
   split-window -h \; \
   #send-keys 'tail -f /var/log/monitor.log' C-m \; \
@@ -245,7 +245,6 @@ alias tm="GNOME_TERMINAL_SCREEN='' gnome-terminal >/dev/null 2>&1"
 __git_ps1() { git branch 2>/dev/null | sed -n 's/* \(.*\)/ \1/p'; }
 export PS1='\[\e[0;91m\][\[\e[0;93m\]\u\[\e[0;92m\]@\[\e[0;38;5;32m\]\h \[\e[0;38;5;207m\]\w\[\e[0m\]$(__git_ps1)\[\e[0;91m\]]\[\e[0;1m\]\n$ \[\e[0m\]'
 
-alias open='xdg-open . >/dev/null 2>&1 &'
 alias v="nvim"
 alias et="emacs -nw"
 
@@ -256,7 +255,7 @@ alias p="sudo pacman"
 alias a="sudo apt"
 alias au="sudo sh -c 'apt update && apt list --upgradable'"
 
-pac-orph(){
+pacorph(){
   # get all orphan packages and delete them
   sudo sh -c 'orphan=$(pacman -Qtdq); [ -z $orphan ] && exit 0 || pacman -Rns $orphan'
 }
