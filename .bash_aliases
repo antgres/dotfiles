@@ -189,6 +189,17 @@ trash(){
   fi
 }
 
+_open(){
+  # open the graphical folder. if no argument is gibven
+  # open the current folder
+  local folder="$PWD"
+  if [ $# -gt 0 ]; then
+    folder="$1"
+  fi
+  xdg-open "$folder" >/dev/null 2>&1
+}
+alias open="_open"
+
 ## abbreviations
 ## -------------
 
