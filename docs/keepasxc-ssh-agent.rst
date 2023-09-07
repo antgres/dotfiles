@@ -7,7 +7,7 @@ Check what keys are loaded withCheck what keys are loaded with
 
 ::
 
-   ssh-agent -l
+   ssh-add -l
 
 Sources of error
 ================
@@ -16,7 +16,7 @@ Sources of error
    operation"*
 
    Check if ssh-agent is running; check if package like
-   *x11-ssh-askpass* is installed
+   *x11-ssh-askpass* or *ssh-askpass* is installed
 
 Documentation
 =============
