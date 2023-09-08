@@ -106,16 +106,20 @@ gitaddcontinue(){
 }
 alias gitcon="gitaddcontinue"
 
+## common commands
+check_package_exists(){
+  local package="$1"
+
+  if command -v "$package" > /dev/null; then
+    true
+  else
+    false
+  fi
+}
+
 
 ## simplify more complex commands
 ## ------------------------------
-splitsen () {
-  # Cut line after around 78 chars
-  # recommended in
-  # https://people.kernel.org/tglx/notes-about-netiquette
-  echo $1 | sed 's/./&\n/78'
-}
-
 cd_up() {
   # jump from nested child into upper folder
   # ex. cd ../../.. -> cd.. 3
@@ -124,12 +128,29 @@ cd_up() {
 alias 'cd..'='cd_up'
 
 copy(){
-  # redirect something into the clipboard buffer
-  if [ -f $1 ]; then
-    xclip -sel clip < $1
-  else
-    "$@" | xclip -sel clip
+  # copy string or file into the CLIPBOARD buffer
+
+  if check_package_exists xclip; then
+    if [ -f $1 ]; then
+      xclip -sel clip -i $1
+    else
+      echo "$@" | xclip -sel clip
+    fi
+    return 0
   fi
+
+  if check_package_exists xsel; then
+    if [ -f $1 ]; then
+      xsel --clipboard < $1
+    else
+      echo "$@" | xsel --clipboard
+    fi
+    return 0
+  fi
+
+  printf "%s" "No supported application found to copy with. " \
+         "Install either 'xsel' or 'xclip'."
+  printf "\n"
 }
 
 ex () {
