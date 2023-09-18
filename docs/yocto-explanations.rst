@@ -9,7 +9,8 @@ See [1] for more information.
    ::
       source poky/oe-init-build-env different-build-folder
 
-Additional information and explainations can be found at [2], [5], [6] or [9].
+Additional information and explanations can be found at [2], [5], [6], [9]
+or [10].
 
 Terms explained
 ---------------
@@ -209,3 +210,6 @@ https://docs.yoctoproject.org/ref-manual/variables.html
 
 [9] Yocto Project Development Tasks Manual
 https://docs.yoctoproject.org/dev-manual/index.html
+
+[10] Real-World Yocto: Getting the Most out of Your Build System - Stephano Cetola, Intel
+https://www.youtube.com/watch?v=LXMwP5_v_k4
