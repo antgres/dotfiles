@@ -42,21 +42,24 @@ alias gitemail-dev="git send-email --cover-letter --no-chain-reply-to --annotate
 alias gitorph="git checkout --orphan"
 # delete root commit (last commit in branch)
 alias gitdelroot="git update-ref -d HEAD"
-# cautious: clean all changes, dry run with -n option
+# cautious: clean all changes. dry run with -n option if unsure
 alias gitmrclean="git clean -fd"
 
-# show log with -L option
 gitloli() {
-  # Use: gitloli FILE LINE
-  # Show log of range of lines (here: single line)
-  if (( $# >= 0 && $# <= 2 )); then
-    if (( $# == 1 )); then
-      # check single file
-      git log -p -- $1
-    else
-      # check LINE
-      git log -L $2,$2:$1
-    fi
+  # Show log for range of lines (here: single line)
+  # Usage:
+  #        gitloli FILE
+  #        gitloli 15 FILE
+  #        gitloli 15 20 FILE
+  if (( $# == 1 )); then
+      # show detailed and complete history of file
+      git log --full-diff $1
+  elif (( $# == 2 )); then
+      # check SINGLE LINE
+      git log -L $1,$1:$2
+  elif (( $# == 3 )); then
+      # check LINE RANGE
+      git log -L $1,$2:$3
   else
     echo "Wrong amount of inputs."
   fi
@@ -211,8 +214,8 @@ trash(){
 }
 
 _open(){
-  # open the graphical folder. if no argument is gibven
-  # open the current folder
+  # open the graphical folder. if no argument is given
+  # open the current path the user is in
   local folder="$PWD"
   if [ $# -gt 0 ]; then
     folder="$1"
