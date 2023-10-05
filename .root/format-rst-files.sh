@@ -6,11 +6,17 @@ set -e
 readonly PANDOC_BIN="/usr/bin/pandoc"
 
 _format-files () {
-  readonly FORMAT_DIR="$1"
-  readonly FILES="$(ls $FORMAT_DIR/*rst)"
+  local FILES="$@"
+
+  if [ -d "$FILES" ]; then
+    # check if input is a directory and get all files which are interesting
+    FILES="$(ls $FILES/*rst)"
+  fi
 
   for FILE in $FILES; do
-        $PANDOC_BIN $FILE -f rst -t rst -s -o $FILE
+        $PANDOC_BIN $FILE -f rst -t rst -s -o "$FILE"
+	# change '\[\]' into '[]'
+	sed -i 's#\\\[#[#g; s#\\\]#]#g' "$FILE"
 	echo "Formated $(echo "$FILE" | grep -o '[^/]*$' )"
   done
 }
@@ -23,15 +29,24 @@ _check-for-pandoc () {
     fi
 }
 
-
 _check-for-pandoc
-# Ask the question
-FORMAT_DIR=$(pwd)
+
 while :; do
-	read -e -p "Format everything in "$FORMAT_DIR" ? (y/n) " answer
+	if [ $# -gt 0 ]; then
+	  # we got some files
+          data_to_check="$@"
+          question="Format $@"
+	else
+          # we want everything in the folder
+	  folder=$(pwd)
+	  data_to_check="$folder"
+          question="Format everything in $folder"
+        fi
+
+	read -e -p "$question? (y/n) " answer
 
 	case $answer in
-		y) _format-files "$FORMAT_DIR"; exit;;
+		y) _format-files "$data_to_check"; exit;;
 		n) exit;;
 		*) echo "Please answer yes or no.";
 	esac
