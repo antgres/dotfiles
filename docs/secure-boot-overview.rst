@@ -460,12 +460,6 @@ https://community.nxp.com/pwmxy87654/attachments/pwmxy87654/imx-processors/60046
 [HAB4] Secure boot in embedded Linux systems - Thomas Perrot
 https://bootlin.com/pub/conferences/2021/lee/perrot-secure-boot/perrot-secure-boot.pdf
 
-Advanced High Assurance Boot (AHAB)
------------------------------------
-
-
-
-
 Hardware TEE vs TPM vs Secure Enclave
 -------------------------------------
 
