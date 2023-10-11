@@ -1,8 +1,8 @@
 # [[ -f ~/.bash_aliases ]] && . ~/.bash_aliases
 
 # change bash_history to save more entries
-HISTSIZE=10000000
-SAVEHIST=10000000
+HISTSIZE=""
+SAVEHIST=""
 
 # Preserve bash history in multiple terminal windows
 HISTCONTROL=ignoredups:erasedups # Avoid duplicates
@@ -18,23 +18,24 @@ PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND$'\n'}history -a; history -c; h
 # ! if only a single commit (root commit) is commited or one wants the root
 # ! commit use the flag *--root* instead of $SHA.
 
+# Taken from https://coderwall.com/p/euwpig/a-better-git-log
+alias gitlg="git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%ar) %C(bold blue)<%an>%Creset' --abbrev-commit"
 # see log as oneliner
 alias gitlo="git log --oneline"
 # see diff of staged commits
 alias gitsta="git diff --cached"
 # reword the last commit
-alias gitrew="git commit --amend --edit"
+alias gita="git commit --amend --edit"
+alias gitna="git commit --amend --no-edit"
 # remove all unstaged changes in repo
-alias gitrm="git checkout -- ."
+alias gitrm="git reset --hard"
 # remove last commit from log
 alias gitres="git reset HEAD~"
-# rebase log interactivly
-alias gitri="git rebase -i"
 # add hunks of a file
 alias gitap="git add -p"
 # show history of moving HEAD, more info with --pretty=short
 alias githis="git reflog --relative-date"
-alias gitchy="git cherry-pick"
+alias gitch="git cherry-pick"
 # Usage: gitemail -v4 --to email@email.de --in-reply-to 424242422442000-email@.de 3a55fcd^
 alias gitemail="git send-email --cover-letter --cc review@linutronix.de --no-chain-reply-to --annotate"
 alias gitemail-dev="git send-email --cover-letter --no-chain-reply-to --annotate"
@@ -44,6 +45,13 @@ alias gitorph="git checkout --orphan"
 alias gitdelroot="git update-ref -d HEAD"
 # cautious: clean all changes. dry run with -n option if unsure
 alias gitmrclean="git clean -fd"
+
+gri(){
+  # rebase log interactivly via fzf
+  # Usage: gri
+  COMMIT="$(git log --oneline | fzf | cut -d' ' -f1)"
+  git rebase -i ${COMMIT}^
+}
 
 gitloli() {
   # Show log for range of lines (here: single line)
@@ -120,7 +128,6 @@ check_package_exists(){
   fi
 }
 
-
 ## simplify more complex commands
 ## ------------------------------
 cd_up() {
@@ -129,32 +136,7 @@ cd_up() {
   cd $(printf "%0.s../" $(seq 1 $1 ));
 }
 alias 'cd..'='cd_up'
-
-copy(){
-  # copy string or file into the CLIPBOARD buffer
-
-  if check_package_exists xclip; then
-    if [ -f $1 ]; then
-      xclip -sel clip -i $1
-    else
-      echo "$@" | xclip -sel clip
-    fi
-    return 0
-  fi
-
-  if check_package_exists xsel; then
-    if [ -f $1 ]; then
-      xsel --clipboard < $1
-    else
-      echo "$@" | xsel --clipboard
-    fi
-    return 0
-  fi
-
-  printf "%s" "No supported application found to copy with. " \
-         "Install either 'xsel' or 'xclip'."
-  printf "\n"
-}
+alias '..'='cd_up'
 
 ex () {
   # # from Manjaro .bashrc
@@ -165,7 +147,7 @@ ex () {
       *.tar.bz2)   tar xjf $1   ;;
       *.tar.gz)    tar xzf $1   ;;
       *.bz2)       bunzip2 $1   ;;
-      *.rar)       unrar x $1     ;;
+      *.rar)       unrar x $1   ;;
       *.gz)        gunzip $1    ;;
       *.tar)       tar xf $1    ;;
       *.tbz2)      tar xjf $1   ;;
@@ -213,7 +195,7 @@ trash(){
   fi
 }
 
-_open(){
+open(){
   # open the graphical folder. if no argument is given
   # open the current path the user is in
   local folder="$PWD"
@@ -222,7 +204,22 @@ _open(){
   fi
   xdg-open "$folder" >/dev/null 2>&1
 }
-alias open="_open"
+
+myip(){
+  # Display the used IP which will used to connect to the server
+  # with the IP 8.8.8.8.
+  # Usage:
+  #        myip    # Display only the used IP
+  #        myip a  # Display the output of the ip route command
+
+  value="$(ip route get 8.8.8.8)"
+
+  if [ "$1" == "a" ]; then
+    echo "$value"
+  else
+    echo "$value" | cut -f7 -d" "| grep -v '^$'
+  fi
+}
 
 ## abbreviations
 ## -------------
@@ -248,6 +245,28 @@ alias lesendf="less +F"
 # then zeros and lastly deleting
 alias shredd="shred -v -n 1 -z -u"
 
+# distrobox
+alias enter="distrobox enter"
+
+_fzf_history(){
+  # search unique lines in bash history execute again
+  QUERY="${@:-}" # take argument which is provided
+  COMMAND="$(uniq -u ~/.bash_history | fzf -i --tac --no-sort --exact --query "${QUERY}")"
+  # save to history to find it later too
+  echo "$COMMAND" >> ~/.bash_history
+  eval $COMMAND # execute command
+}
+
+_fzf_man(){
+  # look thorugh all manpages (apropos) and open the wanted
+  QUERY="${@:-}" # take argument which is provided
+  man -k . | fzf -i --exact --query "${QUERY}" | sed -E 's#^(.*) \((.)\).*#\1(\2)#g' | xargs -I{} man {}
+}
+# bash specific - ignore history for command which matches condition
+HOSTIGNORE="h *" # bash 
+alias h="_fzf_history"
+alias m="_fzf_man"
+
 ## custom abbreviations
 ## --------------------
 alias format-rst="~/.dotfiles/scripts/format-rst-files.sh"
@@ -263,6 +282,14 @@ tmux-dev(){
   #send-keys 'top' C-m \;
 }
 alias tmd="tmux-dev"
+# attach to saved session
+alias t="tmux a"
+
+# Update dotfiles
+ud() {
+  (cd ~/.dotfiles && git pull --ff-only && ./install -q)
+}
+
 ## open correctly a new terminal screen and session
 alias tm="GNOME_TERMINAL_SCREEN='' gnome-terminal >/dev/null 2>&1"
 
@@ -279,14 +306,20 @@ alias p="sudo pacman"
 alias a="sudo apt"
 alias au="sudo sh -c 'apt update && apt list --upgradable'"
 
-pacorph(){
-  # get all orphan packages and delete them
-  sudo sh -c 'orphan=$(pacman -Qtdq); [ -z $orphan ] && exit 0 || pacman -Rns $orphan'
-}
-
 pacclean(){
   # https://ostechnix.com/recommended-way-clean-package-cache-arch-linux/
   # 1) delete the package cache except the latest version
   # 2) Remove all uninstalled packages
   sudo sh -c "paccache -rk 1; pacman -Sc"
+}
+
+pacorph(){
+  # get all orphan packages and delete them
+  sudo sh -c 'orphan=$(pacman -Qtdq); [ -z $orphan ] && exit 0 || pacman -Rns $orphan'
+  pacclean
+}
+
+packeys(){
+  # refresh gpg keys (takes long)
+  sudo sh -c "sudo pacman-key --refresh-keys"
 }

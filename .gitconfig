@@ -1,0 +1,6 @@
+[help]
+	autocorrect = 10
+[diff]
+	algorithm = histogram
+[merge]
+	tool = meld

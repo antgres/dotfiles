@@ -1,6 +1,0 @@
-## show row number
-set linenumbers
-
-## display line number, column number and total
-## of lines
-set constantshow

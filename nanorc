@@ -1,0 +1,48 @@
+# Nanorc
+# Find useful information and settings here
+#	https://bash-prompt.net/guides/nanorc-settings/
+
+## show row number
+set linenumbers
+
+## display line number, column number and total
+## of lines
+set constantshow
+
+## Wrap lines at 80 characters
+## https://unix.stackexchange.com/questions/322437/make-nano-hard-wrap-lines-at-80-characters
+## ^J - Enforce/Justify hard wrap for paragraph
+set fill 79 # 80-1 so it looks nicer
+#set breaklonglines
+
+## Snip whitespace at the end of lines when justifying or hard-wrapping.
+set trimblanks
+
+## Set tab-to-spaces size to 4.
+set tabsize 4
+
+## Convert each typed tab to the fitting number of spaces.
+set tabstospaces
+
+## Enable the syntax highlighting.
+include "/usr/share/nano/*.nanorc"
+#include "/usr/share/nano-syntax-highlighting/*.nanorc"
+
+## If <Tab> should always produce an actual TAB when editing a Makefile:
+extendsyntax makefile tabgives "	"
+
+## show trailing whitespace in green
+##extendsyntax "default" color ,green "[[:space:]]+$"
+
+## Case insensitive search
+set casesensitive
+
+## Bind undo key
+bind ^Z undo main
+
+## set spellchecker as the variable and as a keyboard shortcut
+##	https://forums.bunsenlabs.org/viewtopic.php?id=1731
+# set speller "aspell -x -c"
+set speller "hunspell -x -c"
+unbind ^S main
+bind ^C speller main

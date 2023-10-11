@@ -1,6 +1,13 @@
 # dotfiles
 
+Powered by [dotbot](https://github.com/anishathalye/dotbot).
 
+Install via
+
+```
+  git clone $THIS_DOTFILES --recursive ~/.dotfiles
+  cd ~/.dotfiles && ./install
+```
 
 # Additional modifications
 
@@ -33,7 +40,18 @@ https://kernelnewbies.org
 
 ## programs
 
-autocutsel xclip xsel pandoc codium tldr tmux zsh neovim
+autocutsel
+xsel|xclip
+pandoc
+tldr
+tmux
+debian: libnotify-bin (notify-send)
+libnotify-dev
+fzf
+
+codium
+zsh
+neovim
 
 # fonts
 # source: https://github.com/ryanoasis/nerd-fonts

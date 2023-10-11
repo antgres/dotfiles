@@ -10,14 +10,153 @@ Secure boot
 Secure Boot is a security feature that aims to establish trust and
 integrity throughout the boot process, preventing unauthorized or
 malicious code from compromising, or in general running, on the system.
-[G1] [G2, 1:34]
+[SB1] [SB2]
 
 Secure boot works using cryptographic checksums and signatures. Each
 program that is loaded by the firmware includes a signature and a
 checksum, and before allowing execution, the firmware will verify that
 the program is trusted by validating the checksum and the signature.
 This creates a chain of trust. When secure boot is enabled on a system,
-any attempt to execute an untrusted program will not be allowed. [G1]
+any attempt to execute an untrusted program will not be allowed. [SB1]
+
+Fundamentals
+============
+
+The CIA Triad
+-------------
+
+The three letters in "CIA triad" stand for *Confidentiality*, *Integrity*, and
+*Availability*. The CIA triad is a common model that forms the basis for the
+development of security systems. They are used for finding vulnerabilities and
+methods for creating solutions. [F1]
+
+There are other IT protection goals, including authenticity, privacy,
+reliability and (non)-repudiation. However, the CIA triad is of particular
+importance in information security, as they are often referred to as the
+"pillars of data security". [F2]
+
+The three most important IT protection goals mean in detail: [F2]
+
+- Confidentiality
+  Data should be treated confidentially and only authorized users should be
+  able to view it. This applies both to their state during storage and to any
+  data transmission. Under all circumstances, confidential data must be
+  prevented from falling into the hands of unauthorized persons.
+
+- Integrity
+  Data integrity requires that both the data and the functioning of the
+  processing system are correct. We are also talking here about data integrity
+  and system integrity. In addition, changes made to the data that become
+  necessary in the course of business processes must be traceable.
+
+- Availability
+  This means that both the IT systems and the data stored in them must be
+  available at all times. In most cases, this cannot be guaranteed 100 percent.
+
+Asynchronous Keys
+-----------------
+
+Encryption is the process of encoding information in a format that cannot be
+read or understood by an eavesdropper. [F3]
+
+The process of encrypting and decrypting messages involves keys. And there are
+two main types of encryption keys in cryptographic systems: symmetric-keys and
+asymmetric-keys. [F3]
+
+In asymmetric-key (also called public-key) encryption schemes, a pair of keys
+(usually called public and private keys) is used. Data encrypted with the
+public key can only be decrypted with the private key, and vice-versa. [F3]
+
+This relationship is shown in the following diagram: [F4]
+
+::
+
+                Public                 Private
+                  Key                    Key
+                   |                      |
+    +-------+      |       +-------+      |        +-------+
+    | Plain |  Encryption  | +h*/9 |  Decryption  | Plain |
+    | Text  |------------->| CS[P  |------------->| Text  |
+    +-------+              +-------+              +-------+
+                          Cipher Text
+
+
+The advantage of this schema is that the user can freely share the public
+key with other people while not sharing the private key. If other people want
+to send an encrypted message they can encrypt it with the public key which can
+only be decrypted by the private key. 
+
+Signatures
+----------
+
+Encryption is about confidentiality. It is used to protect the information from
+disclosure to unauthorized parties. However, it is not a way to validate if
+the origin of the information is correct, so if we can trust the source.
+Digital signatures are used to verify the authenticity of digital messages
+or documents. [F4]
+
+Digital signatures leverage cryptographic hash functions like MD5 or SHA to
+ensure the integrity and authenticity of digital documents. Before signing,
+the document's content undergoes a one-way hash function, generating a unique
+hash value. This hash, representing the document's integrity, is then
+encrypted using the signer's private key, forming the digital signature. [F4]
+
+The use of MD5 or SHA enhances security by creating a fixed-size hash unique to
+the content. Recipients can verify the signature by independently calculating
+the hash of the received document, decrypting the attached signature using the
+signer's public key, and confirming a match. [F4]
+
+This relationship is shown in the following diagram: [F4]
+
+::
+
+    Signer--> Data--------------------> +-> Signed
+               +--> Hash--> Encryption--+    Data
+                           (private key)      |
+      +----------- Sending data --------------+
+      |    1
+    Signed|-> Data-> Hash-> Calculated Hash | -> Signature is valid
+    Data  |--> Decryption->  Decrypted Hash | -> when hashes are equal
+           2  (public key)
+
+
+If both authenticity and integrity are present the legitimacy of the data (both
+origin and content) cannot be denied. This is usually called non-repudiation.
+
+However, a potential trap can happen during the transmission: Both the public
+key and the digitally signed document are tampered during transmission. This
+can be solved by certificates and a public-key infrastructure (PKI). [F4]
+
+Certificates
+------------
+
+Certificates are data packages which identifies the entity that is associated
+with a public key. The certificate itself is signed by a single, or multiple,
+trusted Certificate Authority (CA), validating the authenticity of the
+certificate. [F5]
+
+The certificate includes the public key and information about it, information
+about the identity of its owner and the digital signature of an entity that
+has verified the certificate's contents. [F5]
+
+When an individual or organization uses their private key to create eg. a
+digital signature, recipients can verify that signature using the public key
+within the associated certificate. [F5]
+
+[F1] CIA Triad
+https://www.fortinet.com/de/resources/cyberglossary/cia-triad
+
+[F2] CIA-Traide – Definition
+https://it-service.network/it-lexikon/cia-triade
+
+[F3] Introduction to encryption for embedded Linux developers
+https://sergioprado.blog/introduction-to-encryption-for-embedded-linux-developers
+
+[F4] Asymmetric-Key Encryption and Digital Signatures in Practice
+https://sergioprado.blog/asymmetric-key-encryption-and-digital-signatures-in-practice/
+
+[F5] Public key certificate
+https://en.wikipedia.org/wiki/Public_key_certificate
 
 Boot stages
 ===========
@@ -26,23 +165,40 @@ To create a chain of trust each stage in the boot order needs to be
 authenticated (and, if implemented, decrypted) by the stage beforehand
 and also needs to do the same for the next stage in the boot order.
 
-TF-A implements the Trusted Board Boot via asynchronous keys and
-certificates. The single stages are signed and embedded with a public
-key during build time. The authentication process can be described by
-the following figure. [G7]
+Normally this is done via asynchronous keys and certificates. The single
+stages are signed and embedded with a public key during build time. The
+authentication process can be described by the following figures. [SB6] [SB7]
 
 ::
 
+   Build Phase
+
+                     PrivKey
+                        |
+                        +
+   Data---> Hash---> Encrypt
+                        |
+                        +
+                    Signature
+
+
+   Boot Phase
+
                                   PubKey
-            Actual    Expected      |
-   Hash---> Digest-----Digest <---Decrypt
-    |               |               |
-   Data             |           Certificate
+                                    |
+            Actual    Expected      +
+    Data---> Hash-------Hash <---Decrypt
+                    |               +
+                    |               |
+                    |           Signature
                  Compare
 
-Stage N calculates the hash of each stage N+1 image. It compares it with
-the hash obtained from the corresponding content certificate. The image
-authentication succeeds if the hashes match. [G7] [G8]
+The expected hash, or signature, of the next stage N+1 is compared with the
+actual calculated hash of the stage N. The expected hash for each image is
+stored in a X.509 certificate. Each image is authenticated by a public key,
+which is stored in a signed certificate and can be traced back to a root key
+stored on the SoC in one-time-programmable (OTP) memory. The authentication
+succeeds if the hashes match. [SB5] [SB6] [SB8]
 
 The stages can be different depending on the e.g. SoC, but in general
 the following stages can be named:
@@ -53,13 +209,18 @@ the following stages can be named:
 4. Userspace (rootfs)
 5. Userspace application
 
-A more detailed example of a complete boot order can be seen in [G3].
+A more detailed example of a complete boot order can be seen in [SB3].
 
-The **BootROM** (aka Root of Trust) contains a hardwired inital setup
-code which cannot be changed or updated [1]_. It contains the public
+The **BootROM** (aka Root of Trust) contains a hardwired initial setup
+code which cannot be changed or updated. It contains the public
 key(s) and the microcode to check the signature of the next stage, the
-bootloader. [G2, 9:49] [G4] i.MX SoCs implement the [High Assurance
+bootloader. [SB2] [SB4] i.MX SoCs implement the [High Assurance
 Boot](#high-assurance-boot-hab) (HAB) functionality in this stage.
+
+.. note::
+
+   The ability to update the microcode depends on the processor in use.
+   https://wiki.archlinux.org/title/microcode#Which_CPUs_accept_microcode_updates
 
 The **Bootloader** usually consists of several sub-stages itself which
 can be:
@@ -69,26 +230,25 @@ can be:
    [TEE](#trusted-execution-environment-tee)
 3. U-Boot
 
-All sub-stagess check the signature of the next sub-stage to create the
+All sub-stages check the signature of the next sub-stage to create the
 chain of trust. Other security functionality can be initialised and used
 here for the next stages, such as [ARM Trusted
 Firmware](#arm-trusted-firmware-atf (ATF) or [Trusted Execution
 Environment]](#trusted-execution-environment-tee) (TEE).
 
 The bootloader **has** to be sufficiently locked-down, otherwise there
-is no point authenticating it. [G2, 14:50] A link collection for some
-pitfalls and attacks on secure boot via the bootloader are described in
-chapter [Security holes](#security-holes). The use of a FIT image is
-recommended. [G2, 20:13]
+is no point authenticating it. [SB2] A link collection for some pitfalls and
+attacks on secure boot via the bootloader are described in chapter
+[Security holes](#security-holes). The use of a FIT image is recommended. [SB2]
 
 The **kernel**, or in general the **rootfs**, can be additionally
 encrypted (via dm-crypt or dm-crypt) and set to a read-only filesystem
-(eg. squashfs). [G2, 25:02-37:55] [G6]
+(eg. squashfs). [SB2] [SB7]
 
 Disadvantages
 =============
 
-As described in [G2, 7:36], secure boot requires more effort:
+As described in [SB2], secure boot requires more effort:
 
 -  whole architecture to create/build/use/distribute keys
 -  if the platform is locked down, the developer needs to re-sign the
@@ -119,26 +279,29 @@ https://www.synacktiv.com/en/publications/i-hack-u-boot
 Terminology
 ===========
 
-Trusted Execution Environment (TEE)
------------------------------------
+Trusted Execution Environment (TEE) Specification
+-------------------------------------------------
 
 The *Trusted Execution Environment* (TEE) is a specification to define a
 way to ensure the integrity and confidentiality of data running in the
 entity implementing this specification. It specifies the use of both
 hardware and software to protect data and code via a secure area inside
-the main processor. This alongside-system is intended to be more secure
-than the classic *Rich Execution Environment* (REE) system. [TEE1]
+the device. It runs alongside a standard OS or
+*Rich Execution Environment* (REE) system. [TEE1] [TEE2]
 
-"Trusted applications running in a TEE have access to the full power of
+Trusted applications running in a TEE have access to the full power of
 a device's main processor and memory, whereas hardware isolation
 protects these components from user installed applications running in
-the main operating system. Software and cryptographic isolations inside
+the main operating system. Software and hardware isolations inside
 the TEE protect the different contained trusted applications from each
-other." [TEE1]
+other. [TEE1]
 
-TEE also defines in general hardware and software architecture, device
-life cycle, security problem definitions, objectives and requirements
-and attackers profiles (security levels) 1 to 4. [TEE2]
+The TEE specification defines multiple architecture implements to accomplish
+this goal, see  [TEE2, Figure 2-2] and [TEE2, Figure 2-3], as well as an
+overall software architecture, see [TEE2, Figure 2-1].
+
+TEE also defines device life cycle, security problem definitions, objectives
+and requirements and attackers profiles (security levels) 1 to 4. [TEE2]
 
 An example of available hardware technologies which implement TEE can be
 seen in [TEE3].
@@ -270,15 +433,15 @@ The BL1 data section is copied to trusted SRAM at runtime. After
 performing platform setup, BL1 determines if a Firmware Update (FWU) is
 required or to proceed with the normal boot process. [ATD1]
 
-BL1 loads and passes control to BL2 at EL1-Secure. BL2 initalizes
-architecture and plattform specific code. After that BL2 loads the BL31
+BL1 loads and passes control to BL2 at EL1-Secure. BL2 initializes
+architecture and platform specific code. After that, BL2 loads the BL31
 image (the EL3 Runtime Software image), and the optional BL32 image,
 into trusted SRAM and the BL33 image into non-secure memory as defined
 by the platform. Finally, BL2 passes control back to BL1 to call the
 BL31 entrypoint and, once secure state initialization is complete, the
 BL33 entry point. [ATD1]
 
-BL31 initalizes more architecture, plattform and runtime specific code
+BL31 initializes more architecture, platform and runtime specific code
 and services. If a BL32 image is detected a Secure-EL1 Payload
 Dispatcher (SPD) service is needed to initialize the image. [ATD1]
 
@@ -324,7 +487,7 @@ from the TF-A project or it can be an external project (for example
 OP-TEE). BL33 is the first non-secure code loaded by TF-A and may be a
 traditional bootloader like uboot. [ATD2] [ATD4]
 
-For a more in detail explaination for the ARM bootflow see [ATD5].
+For a more in detail explanation of the ARM bootflow see [ATD5].
 
 [ATD1] Firmware Design
 https://trustedfirmware-a.readthedocs.io/en/v2.8/design/firmware-design.html
@@ -362,7 +525,7 @@ specifications, allowing quick and easy porting to modern chips and
 platforms. [TF1]
 
 TF-A includes an Exception Level 3 (EL3) Secure Monitor and is
-implementing the follwoing ARM interface standards: [TF4]
+implementing the following ARM interface standards: [TF4]
 
 -  Power State Coordination Interface (PSCI)
 -  Trusted Board Boot Requirements CLIENT (TBBR-CLIENT)
@@ -406,26 +569,33 @@ https://github.com/ARM-software/arm-trusted-firmware
 OP-TEE
 ------
 
-OP-TEE is an open source TEE that implements TrustZone technology. It is
-designed to use ARM TrustZone technology and is implemented according to
-TEE Internal Core API v1.3.1. [OP1]
+OP-TEE is an open source TEE that is designed to use the ARM TrustZone
+technology in collaboration to a non-secure Linux kernel. It is implemented
+according to TEE Internal Core API v1.3.1. [OP1] [OP4]
 
 OP-TEE consists of three components, OP-TEE Client, OP-TEE Linux driver
 [OP2], and OP-TEE Trusted OS. It also ensures platform integrity with
 TrustZone secure boot.
 
-The OP-TEE project is part of the Trusted Firmware project. [OP4]
+The TEE exposes its features through a tandem operation between a Client
+Application and a Trusted Application. The client application runs in the
+Rich OS and always initiates the communication with the Trusted Application
+that runs in the Trusted OS. The Client application interacts with the TEE
+through the TEE client API interface. The Secure Application interacts with
+the TEE Core through the TEE Internal API. [OP4]
+
+The OP-TEE project is part of the Trusted Firmware project. [OP3]
 
 [OP1] About OP-TEE
 https://optee.readthedocs.io/en/latest/general/about.html
 
 [OP2] TEE subsystem https://docs.kernel.org/staging/tee.html
 
-[OP3] Demystifying ARM TrustZone TEE Client API using OP-TEE
-https://dl.acm.org/doi/10.1145/3426020.3426113
-
-[OP4] OP-TEE moving into Trusted Firmware
+[OP3] OP-TEE moving into Trusted Firmware
 https://www.trustedfirmware.org/blog/op-tee-moving-into-trusted-firmware/
+
+[OP4] Open Portable Trusted Execution Environment (OP-TEE)
+http://trac.gateworks.com/wiki/venice/secure_boot#OpenPortableTrustedExecutionEnvironmentOP-TEE
 
 High Assurance Boot (HAB)
 -------------------------
@@ -457,17 +627,16 @@ https://blog.quarkslab.com/vulnerabilities-in-high-assurance-boot-of-nxp-imx-mic
 [HAB3] i.MX 6 Linux High Assurance Boot (HAB) User's Guide
 https://community.nxp.com/pwmxy87654/attachments/pwmxy87654/imx-processors/60046/1/i.MX_6_Linux_High_Assurance_Boot_(HAB)_User's_Guide.pdf
 
-[HAB4] Secure boot in embedded Linux systems - Thomas Perrot
-https://bootlin.com/pub/conferences/2021/lee/perrot-secure-boot/perrot-secure-boot.pdf
-
 Hardware TEE vs TPM vs Secure Enclave
 -------------------------------------
 
 A hardware trusted execution environment (TEE) is a secure area of a main
-processor which guarantees confidentiality and integrity of code and data
-loaded inside. A TEE as an isolated execution environment provides security
-features such as isolated execution, integrity of applications executing with
-the TEE, along with confidentiality of their assets. [TTS1]
+processor which guarantees confidentiality (no one has access to the data)
+and integrity (no one can change the code and its behaviour) of code and data
+loaded inside. A TEE as an **isolated** execution environment. It provides
+security features such as isolated execution, integrity of applications
+executing with the TEE, along with confidentiality of their assets. [TTS1]
+[TTS4]
 
 Trusted Platform Module (TPM) is an international standard for a secure
 cryptoprocessor – a special microcontroller designed to secure hardware
@@ -477,19 +646,15 @@ interfaces with a standard hardware/software platform to be secured to serve
 the interests of the system designer alone. TPM can also refer to a chip
 conforming to the standard. [TTS1] [TTS2]
 
-A secure enclave is similar to a hardware TEE but they differ in that a
-secure enclave is often a specific component, like a separate co-processor,
-within a device's hardware. The data and processes within the enclave are
-protected from unauthorized access, even if the main system is compromised.
-
-Secure enclaves identifies as a TEE. [TTS3]
+A secure enclave differs from a TEE in that a TEE can be implemented in both
+software and hardware. A secure enclave is only a hardware implementation.
+[TTS3] [TTS5]
 
 A secure element is a tamper-resistant hardware platform, capable of securely
 hosting applications and storing confidential and cryptographic data. It
 provides a highly-secure environment that protects user credentials.
-It refers to secure solutions like STSAFE, ATECC608, and hardware roots of
-trust without the standard TPM interface. Secure elements are unique in terms
-of interface. [TTS1]
+Secure elements are unique in terms of interface. Examples of a secure
+elements are smart-cards or SIM-cards. [TTS1] [TTS4]
 
 [TTS1] What Is the Difference Between HSM, TPM, Secure Enclave, and Secure
 Element or Hardware Root of Trust
@@ -501,6 +666,12 @@ https://www.cryptologie.net/article/500/hardware-solutions-to-highly-adversarial
 
 [TTS3] Secure enclaves
 https://www.thoughtworks.com/en-de/radar/techniques/secure-enclaves
+
+[TTS4] Introduction to Embedded Linux Security - Sergio Prado, Embedded Labworks
+https://www.youtube.com/watch?v=McuP1_mvE_g
+
+[TTS5] Security enclaves, TEE and other creatures
+https://deeprnd.medium.com/security-enclaves-tee-and-other-creatures-c9a7a6d85fb8
 
 UEFI uBoot vs uBoot
 -------------------
@@ -543,31 +714,25 @@ https://u-boot.readthedocs.io/en/latest/develop/uefi/uefi.html
 References
 ==========
 
-[G1] SecureBoot https://wiki.debian.org/SecureBoot
+[SB1] SecureBoot https://wiki.debian.org/SecureBoot
 
-[G2] Secure Boot from A to Z - Quentin Schulz & Mylène Josserand,
-Bootlin https://www.youtube.com/watch?v=jtLQ8SzfrDU
+[SB2] Secure Boot from A to Z - Quentin Schulz & Mylène Josserand,
+Bootlin
+https://www.youtube.com/watch?v=jtLQ8SzfrDU
 
-[G3] From Reset Vector to Kernel - Navigating the ARM Matryoshka - Ahmad
+[SB3] From Reset Vector to Kernel - Navigating the ARM Matryoshka - Ahmad
 Fatoum, Pengutronix https://www.youtube.com/watch?v=-Ak9MWGxd7M
 
-[G4] IFM Ecomatic Workshop - Marek Vašut
+[SB4] IFM Ecomatic Workshop - Marek Vašut
 
-[G5] Secure Boot: What Is It, and Do I Need It? - Fabio Tranchitella,
-Northern.tech https://www.youtube.com/watch?v=Fwp_DMIeK5M
+[SB5] Trusted Board Boot Requirements CLIENT (TBBR-CLIENT) Armv8-A
+https://developer.arm.com/documentation/den0006/d/
 
-[G6] An Introduction to Dm-verity in Embedded Device Security
-https://www.starlab.io/blog/dm-verity-in-embedded-device-security
-
-[G7] Secure boot in embedded Linux systems - Thomas Perrot
+[SB6] Secure boot in embedded Linux systems - Thomas Perrot
 https://bootlin.com/pub/conferences/2021/lee/perrot-secure-boot/perrot-secure-boot.pdf
 
-[G8] Trusted Board Boot - Chain of Trust
+[SB7] An Introduction to Dm-verity in Embedded Device Security
+https://www.starlab.io/blog/dm-verity-in-embedded-device-security
+
+[SB8] Trusted Board Boot - Chain of Trust
 https://trustedfirmware-a.readthedocs.io/en/latest/design/trusted-board-boot.html#chain-of-trust
-
-Footnotes
-=========
-
-.. [1]
-   The ability to update the microcode depends on the processor in use.
-   https://wiki.archlinux.org/title/microcode#Which_CPUs_accept_microcode_updates
