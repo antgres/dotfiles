@@ -18,6 +18,8 @@ PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND$'\n'}history -a; history -c; h
 # ! if only a single commit (root commit) is commited or one wants the root
 # ! commit use the flag *--root* instead of $SHA.
 
+# Taken from https://coderwall.com/p/euwpig/a-better-git-log
+alias gitlg="git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%ar) %C(bold blue)<%an>%Creset' --abbrev-commit"
 # see log as oneliner
 alias gitlo="git log --oneline"
 # see diff of staged commits
@@ -223,6 +225,23 @@ _open(){
   xdg-open "$folder" >/dev/null 2>&1
 }
 alias open="_open"
+
+myip(){
+  # Display the used IP which will used to connect to the server
+  # with the IP 8.8.8.8.
+  # Usage:
+  #        myip    # Display only the used IP
+  #        myip a  # Display the output of the ip route command
+
+  value="$(ip route get 8.8.8.8)"
+
+  if [ "$1" == "a" ]; then
+    echo "$value"
+  else
+    echo "$value" | cut -f7 -d" "| grep -v '^$'
+  fi
+
+}
 
 ## abbreviations
 ## -------------
