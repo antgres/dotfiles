@@ -1,0 +1,15 @@
+# cheatsheet
+https://github.com/shantanoo-desai/yoctoproject-cheatsheet
+https://elinux.org/Bitbake_Cheat_Sheet
+
+# container
+https://github.com/crops/poky-container/blob/master/README.md
+https://ubs_csse.gitlab.io/secu_os/tutorials/crops_yocto.html
+
+# UEFI secure boot
+https://ubs_csse.gitlab.io/secu_os/tutorials/linux_secure_boot.html
+https://mediatek.gitlab.io/aiot/doc/aiot-dev-guide/master/sw/yocto/secure-boot.html
+https://docs.yoctoproject.org/dev-manual/securing-images.html
+http://trac.gateworks.com/wiki/secure_boot
+
+https://git.yoctoproject.org/meta-raspberrypi/tree/?h=kirkstone
