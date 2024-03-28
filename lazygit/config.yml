@@ -1,0 +1,12 @@
+gui:
+  theme:
+    activeBorderColor:
+      - green
+      - bold
+git:
+  commit:
+    signOff: true
+    autoWrapCommitMessage: true # automatic WYSIWYG wrapping of the commit message as you type
+    autoWrapWidth: 79 # if autoWrapCommitMessage is true, the width to wrap to
+    overrideGpg: false # prevents lazygit from spawning a separate process when using GPG
+  branchLogCmd: "git log --oneline --color=always --decorate --date=iso8601-strict --"

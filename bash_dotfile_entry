@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+SOURCE_DIRECTORY="${PWD}/shell"
+
+# Check if directory exists
+if [ -z "${SOURCE_DIRECTORY}" ]; then
+    echo "Please provide a directory path."
+    return 1
+fi
+
+# Find all .sh files in the specified directory and source
+for file in $(find ${SOURCE_DIRECTORY} -maxdepth 1 -type f -name '*.sh'); do
+    source "$file"
+done
+
