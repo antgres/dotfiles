@@ -1,4 +1,0 @@
-auto-reload yes
-
-browser firefox
-macro w set browser "lynx" ; open-in-browser ; set browser firefox

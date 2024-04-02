@@ -1,0 +1,10 @@
+customCommands:
+# https://github.com/jesseduffield/lazygit/wiki/Custom-Commands-Compendium#pushing-to-a-specific-remote-branch
+  - key: '<c-p>'
+    description: "Push to a specific remote branch"
+    context: 'global'
+    loadingText: 'Pushing ...'
+    prompts:
+      - type: 'input'
+        title: 'Which branch do you want to push to?'
+    command: "git push origin {{index .PromptResponses 0}}"

@@ -5,7 +5,28 @@
 
 - clean: ['~', '~/.config']
 
+- shell:
+    - [git submodule update --init --recursive, Installing submodules]
+
 - link:
     ~/.bash_aliases:
     ~/.nanorc:
     ~/.config/newsboat:
+    ~/.config/tmux:
+    ~/.config/lazygit:
+    ~/.local/bin:
+      glob: True
+      path: shell/scripts/public/*
+
+- shell:
+    - [tmux/plugins/tpm/bin/install_plugins, Install tmux plugins]
+    - [tmux/plugins/tpm/bin/update_plugins all, Update all tmux plugins]
+    -
+      command: echo $PATH | grep -q -e "$HOME/.local/bin/" || echo "export PATH=$HOME/.local/bin/:\$PATH" >> $HOME/.bashrc
+      description: Adjust PATH variable to include $HOME/.local/bin/
+    -
+      command: echo $PATH | grep -q -e "/sbin" || echo "export PATH=/sbin/:\$PATH" >> $HOME/.bashrc
+      description: Adjust PATH variable to include /sbin
+    -
+      command: grep -q -e '-f ~/.bash_aliases' $HOME/.bashrc || echo '[ -f ~/.bash_aliases ] && . ~/.bash_aliases' >> $HOME/.bashrc
+      description: Check if bash_aliases is sourced in bashrc

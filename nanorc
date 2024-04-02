@@ -1,6 +1,7 @@
 # Nanorc
 # Find useful information and settings here
 #	https://bash-prompt.net/guides/nanorc-settings/
+#
 
 ## show row number
 set linenumbers
@@ -40,9 +41,13 @@ set casesensitive
 ## Bind undo key
 bind ^Z undo main
 
+bind ^L "{execute}|lltrs {enter}" main
+
 ## set spellchecker as the variable and as a keyboard shortcut
 ##	https://forums.bunsenlabs.org/viewtopic.php?id=1731
+## Use ltrs (rust-languagetool) for checking
 # set speller "aspell -x -c"
 set speller "hunspell -x -c"
+# set speller "lltrs"
 unbind ^S main
 bind ^C speller main

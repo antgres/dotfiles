@@ -1,5 +1,10 @@
 # [[ -f ~/.bash_aliases ]] && . ~/.bash_aliases
 
+# Stop the software flow control so the terminal doesn't freeze up. If that
+# happens use C-q to unfreeze it.
+# https://unix.stackexchange.com/questions/12107/how-to-unfreeze-after-accidentally-pressing-ctrl-s-in-a-terminal
+stty -ixon
+
 # change bash_history to save more entries
 HISTSIZE=""
 SAVEHIST=""

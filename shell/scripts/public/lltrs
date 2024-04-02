@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+#
+# HACK: Since in the shell call command of distrobox-export, so
+# $(distrobox-export -b /sbin/ltrs), the input `--text "Some phrase with a smal
+# mistake"` is not parsed correctly (text input is not recognised as FILE) and
+# throws the following error:
+#
+#   error: invalid value 'phrase' for '[FILENAMES]...': invalid filename (got 'phrase', does not exist or is not a file)
+#
+#   For more information, try '--help'.
+#
+# Circumvent this problem with a temporary file.
+#
+
+TEXT="$@"
+
+# create temporary file, write to it and trap the deletion of the file on shell
+# exit
+FILE=$(mktemp)
+trap 'rm -rf -- "$FILE"' EXIT
+echo "${TEXT}" > $FILE
+
+ltrs check --language en-GB $FILE
