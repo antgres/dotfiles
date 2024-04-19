@@ -6,8 +6,6 @@
 # session in tmux with the selected directory.
 #
 
-DEFAULT_DIRECTORIES="~/ ~/Desktop ~/Downloads ~/Documents ~/Documents/ifm-projects ~/.config"
-
 if [ "$#" -gt 1 ]; then
     printf "Too many arguments. Exit."
     exit 1
@@ -16,10 +14,12 @@ fi
 if [ "$#" -eq 1 ]; then
     selected="$1"
 else
+    DEFAULT_DIRECTORIES="~/ ~/Desktop ~/Downloads ~/Documents ~/Documents/ifm-projects ~/.config"
     # replace character ~ with $HOME
     DEFAULT_DIRECTORIES="$(echo ${DEFAULT_DIRECTORIES} | sed "s/\~/${HOME//\//\\/}/g")"
     # select custom directories and choose via fzf
-    selected=$(find ${DEFAULT_DIRECTORIES} -mindepth 1 -maxdepth 1 -type d | fzf)
+    selected=$(find ${DEFAULT_DIRECTORIES} -mindepth 1 -maxdepth 1 -type d |\
+               fzf -i --exact)
 fi
 
 if [ -z "$selected" ]; then
@@ -27,13 +27,13 @@ if [ -z "$selected" ]; then
     exit 0
 fi
 
-# choose te basename as the session name
-# Rename hidden folders to not confuse tmux
+# choose the basename as the session name
+# Rename hidden folders to not to confuse tmux
 session_name=$(basename "$selected" | tr . _)
 
 if [ -z "$TMUX" ] && [ -z "$(pgrep tmux)" ]; then
-    # if tmux is not running, open tmux and create new session with name
-    # and chosen directory
+    # if tmux is not running, open tmux and create a new session with name and
+    # chosen directory
     tmux new-session -s "$session_name" -c "$selected" &
     exit 0
 fi

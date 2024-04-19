@@ -52,7 +52,7 @@ alias gitdelroot="git update-ref -d HEAD"
 alias gitmrclean="git clean -fd"
 
 gri(){
-  # rebase log interactivly via fzf
+  # rebase into edit-todo interactivly via fzf
   # Usage: gri
   COMMIT="$(git log --oneline | fzf | cut -d' ' -f1)"
   git rebase -i ${COMMIT}^
@@ -124,6 +124,8 @@ alias gitcon="gitaddcontinue"
 
 ## common commands
 check_package_exists(){
+  # Test if package "exists" (is installed). Return true if yes, false if not.
+  # usage: [ check_package_exists $PACKAGE_NAME] && do_stuff;
   local package="$1"
 
   if command -v "$package" > /dev/null; then
@@ -137,20 +139,20 @@ check_package_exists(){
 ## ------------------------------
 cd_up() {
   # jump from nested child into upper folder
-  # ex. cd ../../.. -> cd.. 3
+  # usage: cd ../../.. -> cd.. 3
   cd $(printf "%0.s../" $(seq 1 $1 ));
 }
 alias 'cd..'='cd_up'
 alias '..'='cd_up'
 
 ex () {
-  # # from Manjaro .bashrc
-  # # ex - archive extractor
-  # # usage: ex <file>
+  # from Manjaro .bashrc: archive extractor
+  # usage: ex <file>
   if [ -f $1 ] ; then
     case $1 in
       *.tar.bz2)   tar xjf $1   ;;
       *.tar.gz)    tar xzf $1   ;;
+      *.tar.xz)    tar xf $1    ;;
       *.bz2)       bunzip2 $1   ;;
       *.rar)       unrar x $1   ;;
       *.gz)        gunzip $1    ;;
@@ -165,7 +167,7 @@ ex () {
   elif [ "$1" == "-help" ] || [ "$1" == "--help" ] || [ "$1" == "-h" ]; then
     echo "Usage: ex <file>"
     echo "Supported archives:"
-    echo "    tar.bz2, tar.gz, bz2, rar, gz, tar, tbz2, tgz, zip, Z, 7z"
+    echo "    tar.bz2, tar.gz, tar.xz, bz2, rar, gz, tar, tbz2, tgz, zip, Z, 7z"
   else
     echo "Unkown argument. Try -h"
   fi
@@ -187,7 +189,10 @@ alias fbf="findbiggestfile"
 alias fbd="findbiggestdirectories"
 
 trash(){
-  # look up stuff in the trash folder
+  # look up stuff in the trash directory
+  # Usage:
+  #  trash      # list content of trash directory
+  #  trash pdf  # show all files with pdf in name in trash directory
   local trash_path="${HOME}/.local/share/Trash/files"
 
   if [ $# -eq 0 ]; then
@@ -196,26 +201,25 @@ trash(){
     ll "${trash_path}"/*"$1"* 2>/dev/null ||\
     echo "WARNING Could not find any file with '$1' in it"
   else
-    echo "ERROR Multiple arguments are not supported."
+    echo "ERROR: Multiple arguments are not supported."
   fi
 }
 
 open(){
-  # open the graphical folder. if no argument is given
-  # open the current path the user is in
-  local folder="$PWD"
-  if [ $# -gt 0 ]; then
-    folder="$1"
-  fi
-  xdg-open "$folder" >/dev/null 2>&1
+  # open the graphical GUI. if no argument is given open the current path the
+  # user is in
+  local directory="$PWD"
+  [ $# -gt 0 ] && directory="$1"
+
+  xdg-open "$directory" >/dev/null 2>&1
 }
 
 myip(){
   # Display the used IP which will used to connect to the server
   # with the IP 8.8.8.8.
   # Usage:
-  #        myip    # Display only the used IP
-  #        myip a  # Display the output of the ip route command
+  #   myip    # Display only the used IP
+  #   myip a  # Display the output of the ip route command
 
   value="$(ip route get 8.8.8.8)"
 
@@ -243,7 +247,7 @@ alias lll='ll'
 
 # start at the end of the file
 alias lesend="less +G"
-# start at the end of file and continually load new content
+# start at the end of file and tail the file
 alias lesendf="less +F"
 
 # shred the file by overwriting with random data,
@@ -254,28 +258,32 @@ alias shredd="shred -v -n 1 -z -u"
 alias enter="distrobox enter"
 
 _fzf_history(){
-  # search unique lines in bash history execute again
-  QUERY="${@:-}" # take argument which is provided
-  COMMAND="$(uniq -u ~/.bash_history | fzf -i --tac --no-sort --exact --query "${QUERY}")"
+  # search unique lines in bash history to execute again
+  local HISTORY="$HOME/.bash_history"
+  local QUERY="${@:-}" # take argument which is provided
+  local COMMAND="$(uniq -u ${HISTORY} | fzf -i --tac --no-sort --exact --query "${QUERY}")"
   # save to history to find it later too
-  echo "$COMMAND" >> ~/.bash_history
+  echo "$COMMAND" >> ${HISTORY}
   eval $COMMAND # execute command
 }
 
+# bash specific - ignore history for command which matches condition
+HOSTIGNORE="h *"
+
 _fzf_man(){
   # look thorugh all manpages (apropos) and open the wanted
-  QUERY="${@:-}" # take argument which is provided
-  man -k . | fzf -i --exact --query "${QUERY}" | sed -E 's#^(.*) \((.)\).*#\1(\2)#g' | xargs -I{} man {}
+  local QUERY="${@:-}" # take argument which is provided
+  man -k . | fzf -i --tac --no-sort --exact --query "${QUERY}" |\
+  sed -E 's#^(.*) \((.)\).*#\1(\2)#g' | xargs -I{} man {}
 }
-# bash specific - ignore history for command which matches condition
-HOSTIGNORE="h *" # bash 
 alias h="_fzf_history"
 alias m="_fzf_man"
 
 ## custom abbreviations
 ## --------------------
 alias format-rst="~/.dotfiles/scripts/format-rst-files.sh"
-alias ytmp3="yt-dlp -x -f bestaudio --audio-format mp3 --add-metadata\
+alias ytmp3="yt-dlp \
+             -x -f bestaudio --audio-format mp3 --add-metadata\
              --embed-thumbnail --no-keep-video"
 
 tmux-dev(){
@@ -295,10 +303,10 @@ ud() {
   (cd ~/.dotfiles && git pull --ff-only && ./install -q)
 }
 
-## open correctly a new terminal screen and session
+# open correctly a new terminal screen and session
 alias tm="GNOME_TERMINAL_SCREEN='' gnome-terminal >/dev/null 2>&1"
 
-__git_ps1() { git branch 2>/dev/null | sed -n 's/* \(.*\)/ \1/p'; }
+__git_ps1() { git branch --show-current 2>/dev/null | sed -E -n 's#^(.*)# \1#p'; }
 export PS1='\[\e[0;91m\][\[\e[0;93m\]\u\[\e[0;92m\]@\[\e[0;38;5;32m\]\h \[\e[0;38;5;207m\]\w\[\e[0m\]$(__git_ps1)\[\e[0;91m\]]\[\e[0;1m\]\n$ \[\e[0m\]'
 
 alias v="nvim"
