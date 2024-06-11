@@ -6,8 +6,14 @@
 stty -ixon
 
 # change bash_history to save more entries
-HISTSIZE=""
-SAVEHIST=""
+HISTFILE=$HOME/.bash_history
+export HISTSIZE=
+export HISTFILESIZE=
+export SAVEHIST=$HISTSIZE
+
+#setopt EXTENDED_HISTORY    # Write the history file in the ":start:elapsed;command" format.
+#setopt INC_APPEND_HISTORY  # Write to the history file immediately, not when the shell exits.
+#setopt SHARE_HISTORY       # Share history between all sessions.
 
 # Preserve bash history in multiple terminal windows
 HISTCONTROL=ignoredups:erasedups # Avoid duplicates
@@ -279,6 +285,24 @@ _fzf_man(){
 alias h="_fzf_history"
 alias m="_fzf_man"
 
+i_hate_outlook_365(){
+  # prepend all the text in the primary clipboard buffer with the char '>' and
+  # the correct amount of whitespace because outlook365 does not support that
+  # for replys (the normal windows outlook app does that).
+  # Example:
+  #   > I love cats.
+  #   \n
+  #   Me too.
+  # Transforms to:
+  #   >> I love cats.
+  #   >\n
+  #   > Me too.
+  xclip -sel prim -o |\
+  sed -e 's/^>/>>/g' -e 's/^$/>/g' -e 's/^[^>]/> &/g' |\
+  xclip -sel clip -i
+}
+alias outlook="i_hate_outlook_365"
+
 ## custom abbreviations
 ## --------------------
 alias format-rst="~/.dotfiles/scripts/format-rst-files.sh"
@@ -318,6 +342,19 @@ alias et="emacs -nw"
 alias p="sudo pacman"
 alias a="sudo apt"
 alias au="sudo sh -c 'apt update && apt list --upgradable'"
+
+aptremove(){
+  # Remove all residual packages (aka configurations files of uninstalled
+  # packages). See `man apt-get`
+  # - purge: identical to remove except that packages are removed and purged
+  #          (any configuration files are deleted too) (but not logs).
+  sudo apt remove --purge $(dpkg -l | awk '/^rc/{print $2}')
+}
+
+aptorph(){
+  # Remove all orphan packages
+  sudo apt remove --purge $(dpkg -l | awk '/^iU/{print $2}')
+}
 
 pacclean(){
   # https://ostechnix.com/recommended-way-clean-package-cache-arch-linux/
