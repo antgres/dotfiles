@@ -29,6 +29,7 @@ PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND$'\n'}history -a; history -c; h
 # ! if only a single commit (root commit) is commited or one wants the root
 # ! commit use the flag *--root* instead of $SHA.
 
+alias g="git"
 # Taken from https://coderwall.com/p/euwpig/a-better-git-log
 alias gitlg="git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%ar) %C(bold blue)<%an>%Creset' --abbrev-commit"
 # see log as oneliner
@@ -61,7 +62,7 @@ gri(){
   # rebase into edit-todo interactivly via fzf
   # Usage: gri
   COMMIT="$(git log --oneline | fzf | cut -d' ' -f1)"
-  git rebase -i ${COMMIT}^
+  [ -n "$COMMIT" ] && git rebase -i ${COMMIT}^
 }
 
 gitloli() {
@@ -127,6 +128,19 @@ gitaddcontinue(){
 
 }
 alias gitcon="gitaddcontinue"
+
+git_correct_commit_format(){
+  # In commit messages the citation of other commits has the conanical format
+  # `<12 letters of SHA1> ("subject")`. Use a oneliner to generate this format.
+  # Usage:
+  #   gcf COMMIT_SHA
+
+  # git log --color=never --pretty='tformat:%H ("%s")' HEAD...$1
+
+  git show -s --color=never --pretty='tformat:%H ("%s")' $1 |\
+   sed 's@^\(.\{12\}\)[^ ]\+@\1@'
+}
+alias gcf="git_correct_commit_format"
 
 ## common commands
 check_package_exists(){

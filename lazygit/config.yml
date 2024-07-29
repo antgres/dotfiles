@@ -3,6 +3,7 @@ gui:
     activeBorderColor:
       - green
       - bold
+  filterMode: 'fuzzy'
 git:
   commit:
     signOff: true

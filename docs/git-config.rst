@@ -3,7 +3,7 @@ Git Config Options
 ==================
 
 
-CHeck set settings in directory
+Check set settings in directory
 
 ::
 
@@ -32,6 +32,12 @@ Generate Key
 
 Available documentation suggests ED25519 is more secure than RSA. [2]
 For more settings option see [2] too.
+
+Test connection
+
+::
+
+    ssh -T git@github.com
 
 Docs
 ====
