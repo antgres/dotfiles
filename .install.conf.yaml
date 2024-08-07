@@ -10,12 +10,13 @@
 
 - link:
     ~/.bash_aliases:
-    ~/.nanorc:
-    ~/.config/newsboat:
-    ~/.config/tmux:
-    ~/.config/lazygit:
     ~/.config/i3:
     ~/.config/i3status:
+    ~/.config/lazygit:
+    ~/.config/newsboat:
+    ~/.config/nvim:
+    ~/.config/tmux:
+    ~/.nanorc:
     ~/.local/bin:
       glob: True
       path: shell/scripts/public/*

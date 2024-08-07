@@ -35,8 +35,12 @@ extendsyntax makefile tabgives "	"
 ## show trailing whitespace in green
 ##extendsyntax "default" color ,green "[[:space:]]+$"
 
-## Case insensitive search
+## Default search options:
+## - Case insensitive search
+## - regex
+## Note: Can be deactivated in search window
 set casesensitive
+set regexp
 
 ## Bind undo key
 bind ^Z undo main

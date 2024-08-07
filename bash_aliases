@@ -1,26 +1,38 @@
 # [[ -f ~/.bash_aliases ]] && . ~/.bash_aliases
 
+# Swap caps with esc in debian (gnome) wayland (compositor: mutter)
+# gsettings set org.gnome.desktop.input-sources xkb-options '["caps:escape"]'
+
 # Stop the software flow control so the terminal doesn't freeze up. If that
 # happens use C-q to unfreeze it.
 # https://unix.stackexchange.com/questions/12107/how-to-unfreeze-after-accidentally-pressing-ctrl-s-in-a-terminal
 stty -ixon
 
-# change bash_history to save more entries
-HISTFILE=$HOME/.bash_history
-export HISTSIZE=
+# Eternal bash history.
+# Undocumented feature which sets the size to "unlimited".
+# http://stackoverflow.com/questions/9457233/unlimited-bash-history
 export HISTFILESIZE=
-export SAVEHIST=$HISTSIZE
+export HISTSIZE=
+# Change the file location because certain bash sessions truncate .bash_history file upon close.
+# http://superuser.com/questions/575479/bash-history-truncated-to-500-lines-on-each-login
+export HISTFILE=~/.bash_eternal_history
+
+# Force prompt to write history after every command.
+# http://superuser.com/questions/20900/bash-history-loss
+# After each command, append to the history file and reread it
+PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND$'\n'}history -a; history -c; history -r"
+shopt -s histappend # if shell exists, append to history file
+stophistory () {
+  PROMPT_COMMAND="bash_prompt_command"
+  echo 'History recording stopped. Make sure to `kill -9 $$` at the end of the session.'
+}
+# Preserve bash history in multiple terminal windows
+HISTCONTROL=ignoredups:erasedups # Avoid duplicates
 
 #setopt EXTENDED_HISTORY    # Write the history file in the ":start:elapsed;command" format.
 #setopt INC_APPEND_HISTORY  # Write to the history file immediately, not when the shell exits.
 #setopt SHARE_HISTORY       # Share history between all sessions.
 
-# Preserve bash history in multiple terminal windows
-HISTCONTROL=ignoredups:erasedups # Avoid duplicates
-shopt -s histappend # if shell exists, append to history file
-
-# After each command, append to the history file and reread it
-PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND$'\n'}history -a; history -c; history -r"
 
 ## A whole lot of git
 ## ------------------
@@ -30,15 +42,15 @@ PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND$'\n'}history -a; history -c; h
 # ! commit use the flag *--root* instead of $SHA.
 
 alias g="git"
+alias gitam="git am --3way --ignore-space-change --reject"
 # Taken from https://coderwall.com/p/euwpig/a-better-git-log
 alias gitlg="git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%ar) %C(bold blue)<%an>%Creset' --abbrev-commit"
 # see log as oneliner
 alias gitlo="git log --oneline"
 # see diff of staged commits
 alias gitsta="git diff --cached"
-# reword the last commit
-alias gita="git commit --amend --edit"
-alias gitna="git commit --amend --no-edit"
+# show inline diffs
+alias gitdi='git log --word-diff --format= -p'
 # remove all unstaged changes in repo
 alias gitrm="git reset --hard"
 # remove last commit from log
@@ -129,18 +141,25 @@ gitaddcontinue(){
 }
 alias gitcon="gitaddcontinue"
 
-git_correct_commit_format(){
-  # In commit messages the citation of other commits has the conanical format
-  # `<12 letters of SHA1> ("subject")`. Use a oneliner to generate this format.
+# reword the last commit
+git_add_amend_edit(){
+  # Add and amend file to last commit, but check if user wants to edit the
+  # commit message or not
   # Usage:
-  #   gcf COMMIT_SHA
+  #  git_add_amend_edit [edit] # User wants to edit message
+  #  git_add_amend_edit [edit] FILE # User wants to amend file and edit message
+  #
+  local flag="${1:-no-edit}"
+  local file="$2"
 
-  # git log --color=never --pretty='tformat:%H ("%s")' HEAD...$1
+  if [ -n "${file}" ]; then
+    git add "${file}"
+  fi
 
-  git show -s --color=never --pretty='tformat:%H ("%s")' $1 |\
-   sed 's@^\(.\{12\}\)[^ ]\+@\1@'
+  git commit --amend --${flag}
 }
-alias gcf="git_correct_commit_format"
+alias ga="git_add_amend_edit edit"
+alias gaa="git_add_amend_edit no-edit"
 
 ## common commands
 check_package_exists(){
@@ -154,6 +173,65 @@ check_package_exists(){
     false
   fi
 }
+
+## Yocto specific commands
+
+git_correct_commit_format(){
+  # In commit messages the citation of other commits has the conanical format
+  # `<12 letters of SHA1> ("subject")`. Use a oneliner to generate this format.
+  # Usage:
+  #   gcf COMMIT_SHA
+
+  # git log --color=never --pretty='tformat:%H ("%s")' HEAD...$1
+
+  git show -s --color=never --pretty='tformat:%H ("%s")' $1 |\
+   sed 's@^\(.\{12\}\)[^ ]\+@\1@'
+}
+alias gcf="git_correct_commit_format"
+
+output_src_uri_correctly(){
+  # Write files in a specific way out for SRC_URI.
+  # Example
+  #    Directory
+  #      |- File-1
+  #      |- File-2
+  # is written out as via `src` inside Directory
+  #     file://File-1 \
+  #     file://File-2 \
+  #
+  ORIG="${1:-$PWD}"
+  ls "$ORIG" | sed 's#^\(.*\)$#    file://\1 \\#g'
+}
+alias src="output_src_uri_correctly"
+
+git_format_patch_cp() {
+  # Format-patch the last patches and copy the correct command into the
+  # cliboard buffer if path not decided yet
+  # Usage:
+  #   git_format_patch_cp # Format-patch the last commit
+  #   git_format_patch_cp 5 # Format-patch the last five commits
+  #   git_format_patch_cp 5 /path/to/layer/files # Format-patch the last five
+  #                                              # commits and copy to
+  #                                              # /path/to/layer/files
+  #
+  local quantity=${1:-1}
+  local target="${2:-.}"
+  local file_names="$(git format-patch -${quantity})"
+
+  local list_of_files=""
+  for file in ${file_names}; do
+    list_of_files="${list_of_files} $(realpath "${file}")"
+  done
+
+  local command="cp -t ${target} ${list_of_files}"
+
+  if [ "${target}" == "." ]; then
+    printf "${command}" | xclip -sel clip -i
+  else
+    eval "${command}"
+  fi
+}
+alias gfcp="git_format_patch_cp"
 
 ## simplify more complex commands
 ## ------------------------------
@@ -284,7 +362,17 @@ _fzf_history(){
   local COMMAND="$(uniq -u ${HISTORY} | fzf -i --tac --no-sort --exact --query "${QUERY}")"
   # save to history to find it later too
   echo "$COMMAND" >> ${HISTORY}
-  eval $COMMAND # execute command
+  eval $COMMAND # execute command again
+}
+
+_fz_history(){
+  # search unique lines in bash history to execute again
+  local HISTORY="${HISTFILE}"
+  local QUERY="${@:-}" # take argument which is provided
+  local COMMAND="$(uniq -u ${HISTORY} | fzf -i --tac --no-sort --exact --query "${QUERY}")"
+  # save to history to find it later too
+  echo "$COMMAND" >> ${HISTORY}
+  eval $COMMAND # execute command again
 }
 
 # bash specific - ignore history for command which matches condition
@@ -334,7 +422,7 @@ tmux-dev(){
 }
 alias tmd="tmux-dev"
 # attach to saved session
-alias t="tmux a"
+alias ta="tmux a"
 
 # Update dotfiles
 ud() {
@@ -344,7 +432,8 @@ ud() {
 # open correctly a new terminal screen and session
 alias tm="GNOME_TERMINAL_SCREEN='' gnome-terminal >/dev/null 2>&1"
 
-__git_ps1() { git branch --show-current 2>/dev/null | sed -E -n 's#^(.*)# \1#p'; }
+# more complete than `git branch --show-current` (-> shows more information)
+__git_ps1() { git branch -a 2>/dev/null | sed -n '/* / s#* \(.*\)$# \1#p'; }
 export PS1='\[\e[0;91m\][\[\e[0;93m\]\u\[\e[0;92m\]@\[\e[0;38;5;32m\]\h \[\e[0;38;5;207m\]\w\[\e[0m\]$(__git_ps1)\[\e[0;91m\]]\[\e[0;1m\]\n$ \[\e[0m\]'
 
 alias v="nvim"
@@ -356,6 +445,7 @@ alias et="emacs -nw"
 alias p="sudo pacman"
 alias a="sudo apt"
 alias au="sudo sh -c 'apt update && apt list --upgradable'"
+alias auu="sudo apt upgrade"
 
 aptremove(){
   # Remove all residual packages (aka configurations files of uninstalled
@@ -385,5 +475,15 @@ pacorph(){
 
 packeys(){
   # refresh gpg keys (takes long)
+  # See
+  #    https://wiki.archlinux.org/title/Pacman/Package_signing#Troubleshooting
+  # for more information
+  # In the worst case: Reset the keys with
+  #   sudo sh -c '\
+  #        pacman -Syy archlinux-keyring && \
+  #        rm -r rm -r /etc/pacman.d/gnupg/ && \
+  #        pacman-key --init && \
+  #        pacman-key --populate \
+  #   '
   sudo sh -c "sudo pacman-key --refresh-keys"
 }

@@ -5,25 +5,43 @@
 # Get directories to check (via input or as already defined), and create a new
 # session in tmux with the selected directory.
 #
+# file
+# new
 
-if [ "$#" -gt 1 ]; then
-    printf "Too many arguments. Exit."
+## Global variables
+# Default directories to search from
+_DEFAULT_DIRECTORIES="\
+~/ \
+~/Desktop \
+~/Downloads \
+~/Documents \
+~/Documents/ifm-projects \
+~/.config \
+"
+# replace character ~ with $HOME
+DEFAULT_DIRECTORIES="${_DEFAULT_DIRECTORIES//\~/$HOME}"
+EDITOR="nano"
+
+MODE="${1:-new}"
+if ! [ "${MODE}" = "file" ] && ! [ "${MODE}" = "new" ]; then
+    printf "ERROR: Unknown mode. Choose either \"file\" or \"new\".\n"
     exit 1
 fi
 
-if [ "$#" -eq 1 ]; then
-    selected="$1"
-else
-    DEFAULT_DIRECTORIES="~/ ~/Desktop ~/Downloads ~/Documents ~/Documents/ifm-projects ~/.config"
-    # replace character ~ with $HOME
-    DEFAULT_DIRECTORIES="$(echo ${DEFAULT_DIRECTORIES} | sed "s/\~/${HOME//\//\\/}/g")"
+if [ "${MODE}" == "file" ]; then
+    selected=$(find ${DEFAULT_DIRECTORIES} -type f | fzf -i --exact)
+fi
+
+if [ "${MODE}" == "new" ]; then
     # select custom directories and choose via fzf
-    selected=$(find ${DEFAULT_DIRECTORIES} -mindepth 1 -maxdepth 1 -type d |\
-               fzf -i --exact)
+    # only search for the root directories of the projects
+    selected=$(\
+       find ${DEFAULT_DIRECTORIES} -mindepth 1 -maxdepth 1 -type d |\
+       fzf -i --exact)
 fi
 
 if [ -z "$selected" ]; then
-    printf "No directories choosen. Exit."
+    tmux display-message "Nothing selected. Exit."
     exit 0
 fi
 
@@ -31,17 +49,20 @@ fi
 # Rename hidden folders to not to confuse tmux
 session_name=$(basename "$selected" | tr . _)
 
-if [ -z "$TMUX" ] && [ -z "$(pgrep tmux)" ]; then
-    # if tmux is not running, open tmux and create a new session with name and
-    # chosen directory
-    tmux new-session -s "$session_name" -c "$selected" &
-    exit 0
+# if the session already exists just switch to it
+if tmux has-session -t="${session_name}" 2>-; then
+    tmux switch-client -t "${session_name}"
 fi
 
-if ! tmux has-session -t="$session_name" 2> /dev/null; then
-    # if no session exists with the selected name, create a new session with
-    # the selected name and chosen directory
-    tmux new-session -ds "$session_name" -c "$selected"
+# if no session exists with the selected name, create a new session with the
+# selected name and directory
+DIRNAME="$(dirname ${selected})"
+tmux new-session -ds "${session_name}" -c "${DIRNAME}"
+
+if [ "${MODE}" == "file" ]; then
+    NEWFILE="$(basename ${selected})"
+    # choose pane 0 zero because we spawn a new session
+    tmux send-keys -t="${session_name}.0" "${EDITOR} ${NEWFILE}" Enter
 fi
-# else switch to this session
-tmux switch-client -t "$session_name"
+# finally, switch to it
+tmux switch-client -t "${session_name}"

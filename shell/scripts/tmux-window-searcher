@@ -1,37 +1,29 @@
 #!/usr/bin/env bash
+# Jump to window or session depending on input. We are lazy, so just find the
+# closest match and jump to that.
+#
+# To decide if we wan't to jump to a session or window check the first char if
+# that is a whitespace. If it is, jump to a window, else to a session.
+# Example input:
+#  ' foo' -> Jump to window which includes substring foo
+#  'bar' -> Jump to session which includes substring bar
+#
 
-SESSION=0
-WINDOW=0
-
-while getopts "sw" arg; do
-  case $arg in
-    w)
-       WINDOW=1
-       ;;
-    s)
-       SESSION=1
-       ;;
-    *)
-      echo "Invalid argument '${arg}'" >&2
-      exit 1
-      ;;
-  esac
-done
-
-if [ $SESSION == $WINDOW ]; then
-    echo "Error: -w and -s can't be used together" >&2
-    exit 1
-fi
-
-# Since $1 is the flag check search word after that
-# Search word is at most a single word
-search_word="$2"
-if [ -z "${search_word}" ]; then
+input="$1"
+if [ -z "${input}" ]; then
     echo "Error: No search word found. Please provide." >&2
     exit 1
 fi
 
-## Search for instance
+# Check first char and decide if the target is a window or session.
+if [ "${input:0:1}" == ' ' ]; then
+  WINDOW=1; type="window"
+else
+  SESSION=1; type="session"
+fi
+
+# Remove whitespace for search
+search_word="$(echo "${input}" | tr -d ' ')"
 found=""
 
 # Needs to be in format: session
@@ -42,5 +34,10 @@ found=""
 ((WINDOW)) &&\
   found="$(tmux lsw -a -F '#S:#I #W' |\
   awk -v w="${search_word}" '$2 ~ w {print $1; exit}')"
+
+if [ -z "${found}" ]; then
+  tmux display-message "No ${type} found with abbreviation '${search_word}'."
+  exit 0
+fi
 
 tmux switch-client -t "${found}"
