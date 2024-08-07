@@ -1,5 +1,8 @@
 # [[ -f ~/.bash_aliases ]] && . ~/.bash_aliases
 
+# Swap caps with esc in debian (gnome) wayland (compositor: mutter)
+# gsettings set org.gnome.desktop.input-sources xkb-options '["caps:escape"]'
+
 # Stop the software flow control so the terminal doesn't freeze up. If that
 # happens use C-q to unfreeze it.
 # https://unix.stackexchange.com/questions/12107/how-to-unfreeze-after-accidentally-pressing-ctrl-s-in-a-terminal
