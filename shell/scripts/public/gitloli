@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+function usage {
+    cat <<EOM >&2
+Usage:
+       gitloli FILE        # Show git log of FILE
+       gitloli -r FILE     # Show git log of FILE with raw content, i.e. the
+                           # code changes
+       gitloli 15 FILE     # Show git log of FILE only on LINE 15
+       gitloli 15 20 FILE  # Show git log of FILE between LINE 15 and 20
+EOM
+    exit 1
+}
+
+FLAGS="";
+ARGUMENTS="$#"
+while getopts "hr" arg; do
+  case $arg in
+    r)
+      FLAGS="${FLAGS} -p"
+      ARGUMENTS=$(( ARGUMENTS - 1 ))
+      ;;
+    h)
+      usage
+      ;;
+    *)
+      echo "Invalid argument '${arg}'" >&2
+      usage
+      ;;
+  esac
+done
+
+COMMAND="git log ${FLAGS}"
+if (( ARGUMENTS == 1 )); then
+    # show detailed and complete history of file
+    ${COMMAND} --full-diff $1
+elif (( ARGUMENTS == 2 )); then
+    # check SINGLE LINE
+    ${COMMAND} -L $1,$1:$2
+elif (( ARGUMENTS== 3 )); then
+    # check LINE RANGE
+    ${COMMAND} -L $1,$2:$3
+else
+  echo "Wrong amount of inputs."
+fi
