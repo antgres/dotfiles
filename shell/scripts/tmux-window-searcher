@@ -12,7 +12,7 @@
 input="$1"
 if [ -z "${input}" ]; then
     echo "Error: No search word found. Please provide." >&2
-    exit 1
+    exit 0
 fi
 
 # Check first char and decide if the target is a window or session.

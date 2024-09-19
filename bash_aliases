@@ -33,7 +33,6 @@ HISTCONTROL=ignoredups:erasedups # Avoid duplicates
 #setopt INC_APPEND_HISTORY  # Write to the history file immediately, not when the shell exits.
 #setopt SHARE_HISTORY       # Share history between all sessions.
 
-
 ## A whole lot of git
 ## ------------------
 
@@ -75,26 +74,6 @@ gri(){
   # Usage: gri
   COMMIT="$(git log --oneline | fzf | cut -d' ' -f1)"
   [ -n "$COMMIT" ] && git rebase -i ${COMMIT}^
-}
-
-gitloli() {
-  # Show log for range of lines (here: single line)
-  # Usage:
-  #        gitloli FILE
-  #        gitloli 15 FILE
-  #        gitloli 15 20 FILE
-  if (( $# == 1 )); then
-      # show detailed and complete history of file
-      git log --full-diff $1
-  elif (( $# == 2 )); then
-      # check SINGLE LINE
-      git log -L $1,$1:$2
-  elif (( $# == 3 )); then
-      # check LINE RANGE
-      git log -L $1,$2:$3
-  else
-    echo "Wrong amount of inputs."
-  fi
 }
 
 # append reviewed-by until HASH
@@ -274,13 +253,13 @@ ex () {
 findbiggestfile(){
   local root_path=${1:-"/"}
   local list_size="${2:-50}"
-  sh -x -c "find ${root_path} -xdev -type f -size +100M -exec du -sh {} ';' \
+  sh -x -c "find ${root_path} -xdev -type f -size +100M -exec du -sh {} ';' 2>- \
             | sort -rh | head -n${list_size}"
 }
 findbiggestdirectories(){
   local root_path=${1:-"/"}
   local list_size="${2:-20}"
-  sh -x -c "du -h --all --one-file-system ${root_path} | \
+  sh -x -c "du -h --all --one-file-system ${root_path} 2>- | \
             sort -rh | head -n${list_size}"
 }
 alias fbf="findbiggestfile"
@@ -379,7 +358,7 @@ _fz_history(){
 HOSTIGNORE="h *"
 
 _fzf_man(){
-  # look thorugh all manpages (apropos) and open the wanted
+  # look through all manpages (apropos) and open the wanted
   local QUERY="${@:-}" # take argument which is provided
   man -k . | fzf -i --tac --no-sort --exact --query "${QUERY}" |\
   sed -E 's#^(.*) \((.)\).*#\1(\2)#g' | xargs -I{} man {}
@@ -424,6 +403,19 @@ alias tmd="tmux-dev"
 # attach to saved session
 alias ta="tmux a"
 
+_update_all_panes(){
+  # Write and execute a command for all panes (intended way: refresh
+  # bash_aliases)
+  # Note: Depending on what is executed currently in a pane (for example less
+  # or man), the command is wrongly executed. Watch out.
+  COMMAND="${@:-source /home/dalo/.bash_aliases}"
+
+  for pane in $(tmux list-panes -a -F '#S:#I.#P'); do
+    tmux send-keys -t ${pane} "${COMMAND}" Enter
+  done
+}
+
+
 # Update dotfiles
 ud() {
   (cd ~/.dotfiles && git pull --ff-only && ./install -q)
@@ -438,6 +430,7 @@ export PS1='\[\e[0;91m\][\[\e[0;93m\]\u\[\e[0;92m\]@\[\e[0;38;5;32m\]\h \[\e[0;3
 
 alias v="nvim"
 alias et="emacs -nw"
+alias n="nano"
 
 ## package manager
 ## ---------------
