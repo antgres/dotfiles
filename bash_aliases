@@ -336,21 +336,10 @@ alias enter="distrobox enter"
 
 _fzf_history(){
   # search unique lines in bash history to execute again
-  local HISTORY="$HOME/.bash_history"
   local QUERY="${@:-}" # take argument which is provided
-  local COMMAND="$(uniq -u ${HISTORY} | fzf -i --tac --no-sort --exact --query "${QUERY}")"
+  local COMMAND="$(uniq -u ${HISTFILE} | fzf -i --tac --no-sort --exact --query "${QUERY}")"
   # save to history to find it later too
-  echo "$COMMAND" >> ${HISTORY}
-  eval $COMMAND # execute command again
-}
-
-_fz_history(){
-  # search unique lines in bash history to execute again
-  local HISTORY="${HISTFILE}"
-  local QUERY="${@:-}" # take argument which is provided
-  local COMMAND="$(uniq -u ${HISTORY} | fzf -i --tac --no-sort --exact --query "${QUERY}")"
-  # save to history to find it later too
-  echo "$COMMAND" >> ${HISTORY}
+  echo "$COMMAND" >> ${HISTFILE}
   eval $COMMAND # execute command again
 }
 

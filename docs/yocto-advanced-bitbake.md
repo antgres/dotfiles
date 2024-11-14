@@ -8,6 +8,13 @@ A lot of this stuff is part of
 ## FAQ
 
 
+## Interesting flags
+
+```
+
+BB_GENERATE_MIRROR_TARBALLS = "1"
+```
+
 ## Debugging recipes and task dependencies
 
 per dot file
@@ -22,6 +29,46 @@ it is HIGLY recommended to check out the output of
 as well as
 `bitbake-getvar -r RECIPE|IMAGE VARIABLE`
 which is a subpart of `bitbake -e`
+
+Also there are some flags which produce more verbose ouput like
+
+
+```
+# Uf set, shell scripts echo commands and shell script output appears on
+# standard out (stdout).
+BB_VERBOSE_LOGS = "1"
+```
+
+## Debugging recipes and task dependencies via buildstats and pychartboot
+
+which is defined in [8]
+
+```
+#
+# Additional image features
+#
+# The following is a list of additional classes to use when building images which
+# enable extra features. Some available options which can be included in this variable
+# are:
+#   - 'buildstats' collect build statistics
+#   - 'image-mklibs' to reduce shared library files size for an image
+#   - 'image-prelink' in order to prelink the filesystem image
+# NOTE: if listing mklibs & prelink both, then make sure mklibs is before prelink
+# NOTE: mklibs also needs to be explicitly enabled for a given image, see local.conf.extended
+USER_CLASSES ?= "buildstats"
+```
+
+The buildstats class records performance statistics about each task executed
+during the build (e.g. elapsed time, CPU usage, and I/O usage).
+
+When you use this class, the output goes into the `BUILDSTATS_BASE` directory,
+which defaults to `${TMPDIR}/buildstats/` so probably `build/tmp/buildstats`.
+You can analyze the elapsed time using
+`poky/scripts/pybootchartgui/pybootchartgui.py` like
+
+```
+../poky/scripts/pybootchartgui/pybootchartgui.py tmp/buildstats/
+```
 
 ## Directory naming convenctions
 
@@ -354,3 +401,6 @@ https://docs.yoctoproject.org/dev/ref-manual/structure.html#meta-recipes-bsp
 
 [7] Bitbake Tasks
 https://docs.yoctoproject.org/ref-manual/tasks.html#tasks
+
+[8] Classes: buildstats
+https://docs.yoctoproject.org/ref-manual/classes.html#buildstats

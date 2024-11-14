@@ -49,20 +49,20 @@ fi
 # Rename hidden folders to not to confuse tmux
 session_name=$(basename "$selected" | tr . _)
 
-# if the session already exists just switch to it
-if tmux has-session -t="${session_name}" 2>-; then
-    tmux switch-client -t "${session_name}"
+# if the session does not already exists create it newly too
+if ! tmux has-session -t "${session_name}" 2>-; then
+    # if no session exists with the selected name, create a new session with
+    # the selected directory name. Decide beforehand if the input is a
+    # directory or file
+    [ -d "${selected}" ] && DIRNAME="${selected}" || DIRNAME="dirname ${selected}"
+    tmux new-session -ds "${session_name}" -c "${DIRNAME}"
 fi
-
-# if no session exists with the selected name, create a new session with the
-# selected name and directory
-DIRNAME="$(dirname ${selected})"
-tmux new-session -ds "${session_name}" -c "${DIRNAME}"
 
 if [ "${MODE}" == "file" ]; then
-    NEWFILE="$(basename ${selected})"
+    # Open command in the pane
     # choose pane 0 zero because we spawn a new session
-    tmux send-keys -t="${session_name}.0" "${EDITOR} ${NEWFILE}" Enter
+    tmux send-keys -t="${session_name}.0" "${EDITOR} basename ${selected}" Enter
 fi
+
 # finally, switch to it
 tmux switch-client -t "${session_name}"

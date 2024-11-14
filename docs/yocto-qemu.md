@@ -1,5 +1,6 @@
-# QEMU - Cross-compile a single recipe for another target architecture on the
-# fly
+# QEMU for yocto
+
+## Execute a single binary for another target architecture on the fly via binfmt
 
 TL;DR: See https://animeshz.github.io/site/blogs/binfmt.html for more
 information.
@@ -117,4 +118,27 @@ with `qemu-ppc64le-static -L path/glibc -L path/imx-cst cst`.
 qemu-ppc64le-static \
   -L tmp/work/ppc64p9le-ifmlinux-linux/imx-cst/3.4.0-r0/recipe-sysroot \
   tmp/work/ppc64p9le-ifmlinux-linux/imx-cst/3.4.0-r0/git/code/obj.linux64/cst --help
+```
+
+## Chroot into a rootfs of another target architecture
+
+
+
+```
+    # https://wiki.debian.org/Arm64Qemu#Use_Qemu_user_mode
+    # https://wiki.debian.org/RaspberryPi/qemu-user-static
+
+    ROOTFS_PATH="/home/dalo/Documents/ifm-projects/distro-yocto/build/tmp/work/ifm_imx8mn_vhip4_evalboard-ifmlinux-linux/core-image-minimal-production-vhip4-evalboard/1.0-r0/rootfs/usr/bin"
+
+    sudo apt install qemu-user-static
+
+    # depending on the architecure use a different entry point
+    if [ "$(getconf LONG_BIT)" == "64" ]; then
+        ARCHITECTURE="qemu-aarch64-static"
+    else
+        ARCHITECTURE="qemu-user-static"
+    fi
+
+    cp $(which ${ARCHITECTURE}) ${ROOTFS_PATH}
+    sudo chroot ${ROOTFS_PATH} /bin/bash
 ```
