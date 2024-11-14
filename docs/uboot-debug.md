@@ -7,7 +7,8 @@ SPL and U-Boot does a re-location of address compared to where it is loaded
 originally. This step takes place after the DDR size is determined from dt
 parsing. So, debugging can be split into either “before re-location” or “after
 re-location”. Please refer to the file ‘’doc/README.arm-relocation’’ to see how
-to grab the relocation address. ```
+to grab the relocation address.
+```
 
 
 ```
@@ -17,7 +18,7 @@ to grab the relocation address. ```
 -> openocd seperat
 -> run openocd which opens ports
 
-connect via [1] [3]
+connect to gdb in one command [1] [3]
 
 ```
   gdb-multiarch -ex "target extended-remote localhost:3333" -ex "set arch arm64"
@@ -58,4 +59,5 @@ https://www.youtube.com/watch?v=n3u3QgnAvV8
 
 [3] https://github.com/ARM-software/u-boot/blob/master/doc/README.arm-relocation
 
-
+[4] doc/develop/gdb.rst
+https://github.com/u-boot/u-boot/blob/master/doc/develop/gdb.rst
