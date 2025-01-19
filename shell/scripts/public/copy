@@ -1,7 +1,59 @@
 #!/usr/bin/env bash
 #
-# copy strings or files into the CLIPBOARD and PRIMARY buffer
+# Copy strings, stdout of files or files into the CLIPBOARD
 #
+
+function usage {
+    cat <<EOM >&2
+
+Usage: $(basename "$0") [-h] [-x] [-v] INPUT
+
+OPTIONS
+        -h              Print usage.
+        -x              Do not print the output of a command to the terminal.
+                        Is activated by default for strings (so -s).
+        -s              Indicates that the input is a string and should not be
+                        executed.
+        -v              Show verbose output.
+
+EXAMPLES
+       copy FILE            # Copy the whole file.
+       copy -s "My string"  # Copy the string
+       copy -x ls -l        # Copy the output (stdout) of the command and do
+                            # not print to tty.
+       copy -v ls -l        # Copy the output (stdout) of the command with
+                            # verbose output.
+EOM
+}
+
+SILENT=0; STRING=0; CMD_OUT=1;
+while getopts "vsxh" INPUT; do
+  case $INPUT in
+    v) SILENT=1;;
+    s) STRING=1;;
+    x) CMD_OUT=0;;
+    h|--help) usage; exit 0;;
+    *) echo "Unexpected option: ${INPUT}"; exit 1;;
+  esac
+done
+# Get values after flags
+shift $((OPTIND-1))
+
+# Deactivate CMD Output if STRING
+(( STRING )) && CMD_OUT=0
+
+# Check if any input present
+INPUT="$@"
+if ! [ "${INPUT}" ]; then
+  echo "No valid input '${INPUT}'"
+  exit 1
+fi
+
+# Check if input is a file
+FILE=false
+if [ -f "${INPUT}" ]; then
+  FILE=true
+fi
 
 check_package_exists(){
   local package="$1"
@@ -13,57 +65,39 @@ check_package_exists(){
   fi
 }
 
+_copy() {
+  local app_name="$1"
+  local app_copy="$2"
+  local app_copy_file="$3"
 
-SILENT=1
+  (( SILENT )) && printf "Using ${app_name}.\n"
 
-while getopts "s" INPUT; do
-  case $INPUT in
-    s)
-      SILENT=0
-      ;;
-  esac
-done
-shift $((OPTIND-1))
+  if $FILE; then
+    (( SILENT )) && printf "File '%s' copied.\n" "$INPUT"
 
-INPUT="$@" # get all other INPUTuments
-if ! [ "${INPUT}" ]; then
-  # check if input present
-  echo "No valid input '${INPUT}'"
-return
-fi
+    if [ "${app_name}" = "xsel" ]; then
+      $app_copy_file < $INPUT
+    else
+      $app_copy_file $INPUT
+    fi
+  else
+    (( STRING )) && COPIED="String" || COPIED="Command output"
+    (( SILENT )) && printf "%s '%s' copied.\n" "$COPIED" "$INPUT"
+    (( STRING )) && OUTPUT="${INPUT}" || OUTPUT="$(${INPUT})"
+    (( CMD_OUT )) && printf "${OUTPUT}\n"
 
-# check all possible inputs if they are a file else they are all strings
-NO_FILE=true;
-for file in ${INPUT}; do
-  if [ ! -f "$file" ]; then
-    NO_FILE=false;
-    break;
+    echo "${OUTPUT}" | $app_copy
   fi
-done
+}
 
 if check_package_exists xclip; then
-  (( SILENT )) && printf "Using xclip.\n"
-  if $NO_FILE ; then
-    (( SILENT )) && printf "File '%s' copied.\n" "$INPUT"
-    xclip -sel prim -i $INPUT
-  else
-    (( SILENT )) && printf "String '%s' copied.\n" "$INPUT"
-    echo "$INPUT" | xclip -sel prim
-  fi
-  exit 0
+  BUFFER="clip"
+  _copy 'xclip' "xclip -sel ${BUFFER}" "xclip -sel ${BUFFER} -i"
+elif check_package_exists xsel; then
+  BUFFER="--clipboard"
+  _copy 'xsel' "xsel ${BUFFER}" "xsel ${BUFFER}"
+else
+  echo "No supported application found to copy with. Install either 'xsel' or 'xclip'."
+  exit 1
 fi
 
-if check_package_exists xsel; then
-  (( SILENT )) && printf "Using xsel.\n"
-  if $NO_FILE ; then
-    (( SILENT )) && printf "File '%s' copied.\n" "$INPUT"
-    xsel --primary < $INPUT
-  else
-    (( SILENT )) && printf "String '%s' copied.\n" "$INPUT"
-    echo "$INPUT" | xsel --primary
-  fi
-  exit 0
-fi
-
-printf "%s %s\n" "No supported application found to copy with."\
-"Install either 'xsel' or 'xclip'."

@@ -1,5 +1,6 @@
 # [[ -f ~/.bash_aliases ]] && . ~/.bash_aliases
 
+
 # Swap caps with esc in debian (gnome) wayland (compositor: mutter)
 # gsettings set org.gnome.desktop.input-sources xkb-options '["caps:escape"]'
 
@@ -72,7 +73,11 @@ alias gitmrclean="git clean -fd"
 gri(){
   # rebase into edit-todo interactivly via fzf
   # Usage: gri
-  COMMIT="$(git log --oneline | fzf | cut -d' ' -f1)"
+  COMMIT="$(git log --oneline | \
+    fzf -d " " --preview 'git show --color=always {1}' \
+    --bind 'shift-up:preview-up,shift-down:preview-down' \
+    --bind 'page-up:preview-page-up,page-down:preview-page-down' \
+    --bind 'enter:execute(echo {1})+abort')"
   [ -n "$COMMIT" ] && git rebase -i ${COMMIT}^
 }
 
@@ -335,16 +340,31 @@ alias shredd="shred -v -n 1 -z -u"
 alias enter="distrobox enter"
 
 _fzf_history(){
+  # Print the command found in history as input back to the terminal
+  if [ "$1" = "--print" ]; then
+    print="1"
+    # remove flag from $@
+    shift
+  fi
+
   # search unique lines in bash history to execute again
   local QUERY="${@:-}" # take argument which is provided
   local COMMAND="$(uniq -u ${HISTFILE} | fzf -i --tac --no-sort --exact --query "${QUERY}")"
-  # save to history to find it later too
-  echo "$COMMAND" >> ${HISTFILE}
-  eval $COMMAND # execute command again
+
+  if [ "$print" = "1" ]; then
+    # HACK: Only works for tmux
+    ID="$(tmux display-message -p '#S:#I')"
+    tmux send-keys -t "${ID}" "${COMMAND}"
+  else
+    # save to history to find it later too
+    echo "$COMMAND" >> ${HISTFILE}
+    # execute command again
+    eval $COMMAND 
+  fi
 }
 
 # bash specific - ignore history for command which matches condition
-HOSTIGNORE="h *"
+export HOSTIGNORE="h *:H *"
 
 _fzf_man(){
   # look through all manpages (apropos) and open the wanted
@@ -352,6 +372,7 @@ _fzf_man(){
   man -k . | fzf -i --tac --no-sort --exact --query "${QUERY}" |\
   sed -E 's#^(.*) \((.)\).*#\1(\2)#g' | xargs -I{} man {}
 }
+alias H="_fzf_history --print"
 alias h="_fzf_history"
 alias m="_fzf_man"
 
@@ -421,13 +442,25 @@ alias v="nvim"
 alias et="emacs -nw"
 alias n="nano"
 
+_command_stats() {
+  # Print out stats about occurrence of commands.
+  # https://hackaday.com/2024/12/22/optimizing-your-linux-shell-experience/
+  local AMOUNT="$1"
+
+  history | \
+  awk '{CMD[$2]++;count++;}END { for (a in CMD)print CMD[a] " " CMD[a]/count*100 "% " a;}' | \
+  grep -v "./" | column -c3 -s " " -t | sort -nr | nl | head -n $AMOUNT
+}
+
 ## package manager
 ## ---------------
 
-alias p="sudo pacman"
 alias a="sudo apt"
 alias au="sudo sh -c 'apt update && apt list --upgradable'"
 alias auu="sudo apt upgrade"
+alias p="sudo pacman"
+alias pu="sudo sh -c ' pacman -Syy --needed archlinux-keyring && pacman -Qu'"
+alias puu="sudo pacman -Su"
 
 aptremove(){
   # Remove all residual packages (aka configurations files of uninstalled
