@@ -10,13 +10,14 @@
 stty -ixon
 
 # Eternal bash history.
+# Change the file location because certain bash sessions truncate .bash_history file upon close.
+# http://superuser.com/questions/575479/bash-history-truncated-to-500-lines-on-each-login
+# Note: sudo chattr +a ~/.bash_eternal_history
+export HISTFILE=~/.bash_eternal_history
 # Undocumented feature which sets the size to "unlimited".
 # http://stackoverflow.com/questions/9457233/unlimited-bash-history
 export HISTFILESIZE=
 export HISTSIZE=
-# Change the file location because certain bash sessions truncate .bash_history file upon close.
-# http://superuser.com/questions/575479/bash-history-truncated-to-500-lines-on-each-login
-export HISTFILE=~/.bash_eternal_history
 
 # Force prompt to write history after every command.
 # http://superuser.com/questions/20900/bash-history-loss
@@ -79,6 +80,19 @@ gri(){
     --bind 'page-up:preview-page-up,page-down:preview-page-down' \
     --bind 'enter:execute(echo {1})+abort')"
   [ -n "$COMMIT" ] && git rebase -i ${COMMIT}^
+}
+
+gref(){
+  # Look through "git reflog [FILE]" interactivly via fzf
+  # Usage: gref
+
+  FILE="${1:-}"
+  COMMIT="$(git reflog ${FILE} | \
+    fzf -d " " --preview 'git show --color=always {1}' \
+    --bind 'shift-up:preview-up,shift-down:preview-down' \
+    --bind 'page-up:preview-page-up,page-down:preview-page-down' \
+    --bind 'enter:execute(echo {1})+abort')"
+  [ -n "$COMMIT" ] && printf 'Commit: %s\n' "$COMMIT"
 }
 
 # append reviewed-by until HASH
@@ -418,7 +432,7 @@ _update_all_panes(){
   # bash_aliases)
   # Note: Depending on what is executed currently in a pane (for example less
   # or man), the command is wrongly executed. Watch out.
-  COMMAND="${@:-source /home/dalo/.bash_aliases}"
+  COMMAND="${@:-source $HOME/.bash_aliases}"
 
   for pane in $(tmux list-panes -a -F '#S:#I.#P'); do
     tmux send-keys -t ${pane} "${COMMAND}" Enter
