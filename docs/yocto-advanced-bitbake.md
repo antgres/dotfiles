@@ -7,6 +7,17 @@ A lot of this stuff is part of
 ## FAQ
 
 
+## Speeding up the build process via SSTATE_MIRROR
+
+https://docs.yoctoproject.org/dev/brief-yoctoprojectqs/index.html#building-your-image -> Examine Your Local Configuration File -> Tip
+
+```
+BB_HASHSERVE_UPSTREAM = "wss://hashserv.yoctoproject.org/ws"
+SSTATE_MIRRORS ?= "file://.* http://cdn.jsdelivr.net/yocto/sstate/all/PATH;downloadfilename=PATH"
+BB_HASHSERVE = "auto"
+BB_SIGNATURE_HANDLER = "OEEquivHash"
+```
+
 ## Interesting flags
 
 ```
@@ -34,9 +45,24 @@ graphical application to browse the tasks and dependencies.
 The simple graph query utility script `poky/scripts/contrib/graph-tool` can be
 used to filter out some specific information from that .dot file.
 
-To create a simple dependency graph for e.g. [Graphviz
-Online](https://dreampuf.github.io/GraphvizOnline/) the following command can
-be used:
+To create a simple dependency graph the simple command `oe-depends-dot` can be
+used:
+
+```
+bitbake -g core-image
+poky/scripts/oe-depends-dot --depends --key RECIPE task-depends.dot
+
+# Get dependiencies of recipes in a layer
+LIST="$(find ../meta-clang -type f -name '*.bb' -exec basename {} .bb \; | cut -d'_' -f1)"
+for recipe in $LIST; do
+  oe-depends-dot -w -k  $recipe task-depends.dot | grep '\->'
+done
+```
+
+For a more graphical result one can use the `graph-tool` command with an
+additional visual tool like [Graphviz
+Online](https://dreampuf.github.io/GraphvizOnline/) which the result can be
+pasted into.
 
 ```
 poky/scripts/contrib/graph-tool filter -n /path/to/build/task-depends.dot RECIPE
@@ -44,8 +70,6 @@ poky/scripts/contrib/graph-tool filter -n /path/to/build/task-depends.dot RECIPE
 poky/scripts/contrib/graph-tool find-paths /path/to/build/task-depends.dot \
      RECIPE.do_install RECIPE.do_fetch
 ```
-
-which can be pasted into the visualizer.
 
 ### Viewing RECIPE and IMAGE variables
 

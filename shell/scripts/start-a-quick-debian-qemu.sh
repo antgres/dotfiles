@@ -9,11 +9,11 @@
 
 SKIP="${1:-yes}"
 DISTRO_URL=PREFIX="https://cloud.debian.org/images/cloud/bookworm/latest"
-RAW_IMAGE="debian-12-nocloud-amd64.raw"
+RAW_IMAGE="debian-12-nocloud-arm64.raw"
 SHASUM_FILE="SHA512SUMS"
 HASH="512"
 
-if [ "$SKIP" != "yes" ]
+if [ "$SKIP" != "yes" ]; then
     # Get image
     curl -O ${DISTRO_URL=PREFIX}/${RAW_IMAGE}
 
@@ -33,10 +33,11 @@ fi
 # Special settings:
 # - Map port 22 to 5573
 # Use -kernel and -append flags for custom kernel boot
-qemu-system-x86_64 \
-  -machine pc,accel=kvm \
+qemu-system-arm \
+  -machine virt,accel=kvm \
+  -cpu cortex-a72 \
   -m 1G \
-  -drive file=./debian-12-nocloud-amd64.raw,if=virtio \
+  -drive format=raw,file=./debian-12-nocloud-amd64.raw,if=virtio \
   -netdev type=user,hostfwd=tcp::5573-:22,id=net0 \
   -device virtio-net,netdev=net0 \
   -rtc base=localtime \

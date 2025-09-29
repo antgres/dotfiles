@@ -115,9 +115,13 @@ More information can be found at:
 NFS Booting with U-Boot
 =======================
 
-A common configuration for rapid kernel/application development and debugging is to have the target machine connected to a development host inside a network.
+A common configuration for rapid kernel/application development and debugging
+is to have the target machine connected to a development host inside a network.
 
-This documentation describes the steps needed to a) setup a NFS Server on a development PC and b) the necessary configurations in U-boot on the development board to boot from the host PC. This allows the development board to mount a root file system over Ethernet.
+This documentation describes the steps needed to a) setup a NFS Server on a
+development PC and b) the necessary configurations in U-boot on the development
+board to boot from the host PC. This allows the development board to mount a
+root file system over Ethernet.
 
 Assumptions
 -----------
@@ -142,12 +146,20 @@ A NFS server is to be installed on the host PC. For this example ``nfs-kernel-se
 
    sudo apt install nfs-kernel-server
 
-Add a rule to the configuration file */etc/exports* to share the folder */path/to/nfsroot* to the development board with IP ``192.168.0.100``. The folder will be shared **only** with the IP ``192.168.0.100``.
+Add a rule to the configuration file */etc/exports* to share the folder
+*/path/to/nfsroot* to the development board with IP ``192.168.0.100``. The
+folder will be shared **only** with the IP ``192.168.0.100``.
 
 ::
 
   /path/to/nfsroot 192.168.0.100(rw,sync,no_subtree_check,no_root_squash)
 
+
+Reload the configuration for the NFS server via
+
+::
+
+  sudo exportfs -r
 
 Save the new rule and restart the nfs-kernel-server.
 
@@ -157,15 +169,21 @@ Save the new rule and restart the nfs-kernel-server.
 
 .. note::
 
-   The wildcard characters * and ? can be used in the export file to share the folder with multiple hosts. See *man 5 exports* for more information.
+   The wildcard characters * and ? can be used in the export file to share the
+   folder with multiple hosts. See *man 5 exports* for more information.
 
 Preparing U-Boot
 ----------------
-In this example, the host PC is assigned the IP address ``192.168.0.1`` and the development board is assigned the IP address ``192.168.0.100``.
 
-Start the development board, stop the bootloader and configure the U-Boot environment variables. If you wish your settings to be persistent across reboots save the environment variables with ``saveenv``.
+In this example, the host PC is assigned the IP address ``192.168.0.1`` and the
+development board is assigned the IP address ``192.168.0.100``.
 
-Take care that the settings from the */etc/exports* matches the target IP settings in the bootloader.
+Start the development board, stop the bootloader and configure the U-Boot
+environment variables. If you wish your settings to be persistent across
+reboots save the environment variables with ``saveenv``.
+
+Take care that the settings from the */etc/exports* matches the target IP
+settings in the bootloader.
 
 ::
 
@@ -185,16 +203,27 @@ Take care that the settings from the */etc/exports* matches the target IP settin
 
    U-Boot# saveenv
 
-In order for the kernel to mount the root file system over NFS the kernel boot arguments ``bootargs`` needs to be adjusted. In this case it is assumed that the NFS share is connected to the interface *eth0*.
+or shorter
 
 ::
 
-   U-Boot# setenv bootargs root=/dev/nfs console=ttyO0,115200n8 nfsroot=${serverip}:${nfsroot},nfsvers=3 ip=${ipaddr}:::::eth0
+  U-Boot# setenv ipaddr 192.168.0.100 && setenv netmask 255.255.255.0 && setenv serverip 192.168.0.1
+  U-Boot# setenv boot_mode nfs && setenv ip-method static && setenv nfsroot /path/to/nfsroot
+
+In order for the kernel to mount the root file system over NFS the kernel boot
+arguments ``bootargs`` needs to be adjusted. In this case it is assumed that
+the NFS share is connected to the interface *eth0*.
+
+::
+
+   U-Boot# setenv bootargs root=/dev/nfs console=ttyO0,115200n8 nfsroot=${serverip}:${nfsroot},nfsvers=3 ip=${ipaddr}:${serverip}:${gatewayip}:${netmask}::eth0:off
    U-Boot# saveenv
 
 .. note::
 
-   If any further debug messages are needed for mounting the NFS share from the kernel, the flag ``nfsrootdebug`` can be appended to the kernel boot arguments.
+   If any further debug messages are needed for mounting the NFS share from the
+   kernel, the flag ``nfsrootdebug`` can be appended to the kernel boot
+   arguments.
 
 Run **boot** to boot the target.
 
@@ -206,6 +235,8 @@ Documentation
 -------------
 More information can be found at:
 
+- Recommended: Setting up the NFS server https://bootlin.com/doc/training/embedded-linux-qemu/embedded-linux-qemu-labs.pdf#section*.41
+
 - exports options https://man7.org/linux/man-pages/man5/exports.5.html
 
 - Kernel Boot Arguments https://man7.org/linux/man-pages/man7/bootparam.7.html
@@ -213,6 +244,4 @@ More information can be found at:
 - U-Boot Environment Variables https://u-boot.readthedocs.io/en/latest/usage/environment.html
 
 - NFS boot example https://www.kernel.org/doc/html/latest/admin-guide/nfs/nfsroot.html
-
-
 
