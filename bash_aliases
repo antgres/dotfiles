@@ -448,9 +448,17 @@ ud() {
 # open correctly a new terminal screen and session
 alias tm="GNOME_TERMINAL_SCREEN='' gnome-terminal >/dev/null 2>&1"
 
-# more complete than `git branch --show-current` (-> shows more information)
-__git_ps1() { git branch -a 2>/dev/null | sed -n '/* / s#* \(.*\)$# \1#p'; }
-export PS1='\[\e[0;91m\][\[\e[0;93m\]\u\[\e[0;92m\]@\[\e[0;38;5;32m\]\h \[\e[0;38;5;207m\]\w\[\e[0m\]$(__git_ps1)\[\e[0;91m\]]\[\e[0;1m\]\n$ \[\e[0m\]'
+# Get a) the current tag, b) the current branch or c) the commit SHA. Prefix
+# the result with a whitespace.
+git_ps1() {
+  # If not a git directory do not execute commands
+  [ -d "$PWD/.git" ] || return
+  NAME="$( (git describe --tags --exact-match || git branch --show-current) 2>/dev/null)"
+  # If no tag or branch name fits just take the commit hash
+  [ -z "${NAME}" ] && NAME="$(printf 'Detached %s' "$(git rev-parse HEAD | head -c 12)")"
+  printf '%s' "${NAME}" | sed -n '/./ s/^/ /p'
+}
+export PS1='\[\e[0;91m\][\[\e[0;93m\]\u\[\e[0;92m\]@\[\e[0;38;5;32m\]\h \[\e[0;38;5;207m\]\w\[\e[0m\]$(git_ps1)\[\e[0;91m\]]\[\e[0;1m\]\n$ \[\e[0m\]'
 
 alias v="nvim"
 alias et="emacs -nw"
