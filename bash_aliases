@@ -174,18 +174,11 @@ check_package_exists(){
 
 ## Yocto specific commands
 
-git_correct_commit_format(){
-  # In commit messages the citation of other commits has the conanical format
-  # `<12 letters of SHA1> ("subject")`. Use a oneliner to generate this format.
-  # Usage:
-  #   gcf COMMIT_SHA
-
-  # git log --color=never --pretty='tformat:%H ("%s")' HEAD...$1
-
-  git show -s --color=never --pretty='tformat:%H ("%s")' $1 |\
-   sed 's@^\(.\{12\}\)[^ ]\+@\1@'
-}
-alias gcf="git_correct_commit_format"
+# In commit messages the citation of other commits has the conanical format
+# `<12 letters of SHA1> ("subject")`. Use a oneliner to generate this format.
+# Usage:
+#   gcf COMMIT_SHA
+alias gcf="git show -s --color=never --abbrev=12 --pretty=format:'%h ("%s")'"
 
 output_src_uri_correctly(){
   # Write files in a specific way out for SRC_URI.
