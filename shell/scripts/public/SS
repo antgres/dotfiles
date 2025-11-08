@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+#
+# Taken from
+#   https://silverrainz.me/blog/2025-09-systemd-fzf-aliases.html#the-heart-taming-systemd-with-fzf
+#
+# If input is provided list all services via fzf. Print the status if the one
+# which is selected. Else just be an abbreviation
+#
+# Usage:
+#   SS
+#   SS status ssh
+
+input="$@"
+SYS="sudo systemctl"
+
+if [ -z "$input" ]; then
+  $SYS list-units --legend=false | \
+  fzf --nth=1 --exact \
+    --no-hscroll \
+    --preview="$SYS status {1}" \
+    --preview-window=down
+else
+  $SYS $input
+fi

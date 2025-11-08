@@ -16,6 +16,7 @@
     ~/.config/newsboat:
     ~/.config/nvim:
     ~/.config/tmux:
+    ~/.gitconfig:
     ~/.nanorc:
     ~/.local/bin:
       glob: True

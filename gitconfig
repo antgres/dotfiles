@@ -1,0 +1,31 @@
+[user]
+	name = Anton Gres
+	email = anton-gres@web.de
+[core]
+	editor = nano
+	autocrlf = input
+[pull]
+	rebase = false
+[fetch]
+    prune = true
+#[credential]
+#	helper = store
+#	modalprompt = false
+[alias]
+    alias = config --get-regexp alias
+    tags = tag -l
+    branches = branch -a
+    remotes = remote -v
+    wdiff = log --word-diff --format= -p
+[help]
+	autocorrect = 5
+[diff]
+	algorithm = histogram
+[push]
+	autoSetupRemote = true
+[rebase]
+	updateRefs = true
+[rerere]
+	enabled = true
+[includeIf "hasconfig:remote.*.url:*gitlab*.dev.ifm:*/**"]
+    path = ~/.gitconfig.ifm

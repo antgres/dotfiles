@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+yt-dlp -x -f bestaudio \
+--audio-format mp3 --add-metadata \
+--embed-thumbnail --no-keep-video \
+-o '%(title)s.%(ext)s' \
+"$@"

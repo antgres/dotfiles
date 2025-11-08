@@ -70,6 +70,7 @@ alias gitorph="git checkout --orphan"
 alias gitdelroot="git update-ref -d HEAD"
 # cautious: clean all changes. dry run with -n option if unsure
 alias gitmrclean="git clean -fd"
+alias gitlblame="git blame -w -C -C -C"
 
 gri(){
   # rebase into edit-todo interactivly via fzf
@@ -178,7 +179,7 @@ check_package_exists(){
 # `<12 letters of SHA1> ("subject")`. Use a oneliner to generate this format.
 # Usage:
 #   gcf COMMIT_SHA
-alias gcf="git show -s --color=never --abbrev=12 --pretty=format:'%h ("%s")'"
+alias gcf="git show -s --abbrev=12 --pretty=format:'%h ("%s")'"
 
 output_src_uri_correctly(){
   # Write files in a specific way out for SRC_URI.
@@ -234,32 +235,9 @@ cd_up() {
 alias 'cd..'='cd_up'
 alias '..'='cd_up'
 
-ex () {
-  # from Manjaro .bashrc: archive extractor
-  # usage: ex <file>
-  if [ -f $1 ] ; then
-    case $1 in
-      *.tar.bz2)   tar xjf $1   ;;
-      *.tar.gz)    tar xzf $1   ;;
-      *.tar.xz)    tar xf $1    ;;
-      *.bz2)       bunzip2 $1   ;;
-      *.rar)       unrar x $1   ;;
-      *.gz)        gunzip $1    ;;
-      *.tar)       tar xf $1    ;;
-      *.tbz2)      tar xjf $1   ;;
-      *.tgz)       tar xzf $1   ;;
-      *.zip)       unzip $1     ;;
-      *.Z)         uncompress $1;;
-      *.7z)        7z x $1      ;;
-      *)           echo "'$1' cannot be extracted via ex()" ;;
-    esac
-  elif [ "$1" == "-help" ] || [ "$1" == "--help" ] || [ "$1" == "-h" ]; then
-    echo "Usage: ex <file>"
-    echo "Supported archives:"
-    echo "    tar.bz2, tar.gz, tar.xz, bz2, rar, gz, tar, tbz2, tgz, zip, Z, 7z"
-  else
-    echo "Unkown argument. Try -h"
-  fi
+mkcd() {
+  # Create directory and move into it.
+  mkdir -p "$1" && cd "$1" || echo "Could not create $1"
 }
 
 findbiggestfile(){
@@ -321,8 +299,6 @@ myip(){
 
 ## abbreviations
 ## -------------
-
-alias SS="sudo systemctl"
 alias ssn="sudo shutdown -h now"
 alias srn="sudo reboot"
 
@@ -403,23 +379,6 @@ alias outlook="i_hate_outlook_365"
 
 ## custom abbreviations
 ## --------------------
-alias format-rst="~/.dotfiles/scripts/format-rst-files.sh"
-alias ytmp3="yt-dlp \
-             -x -f bestaudio --audio-format mp3 --add-metadata\
-             --embed-thumbnail --no-keep-video"
-
-tmux-dev(){
-  tmux new-session \; \
-  split-window -h \; \
-  #send-keys 'tail -f /var/log/monitor.log' C-m \; \
-  #split-window -v \; \
-  #split-window -h \; \
-  #send-keys 'top' C-m \;
-}
-alias tmd="tmux-dev"
-# attach to saved session
-alias ta="tmux a"
-
 _update_all_panes(){
   # Write and execute a command for all panes (intended way: refresh
   # bash_aliases)
@@ -437,6 +396,8 @@ _update_all_panes(){
 ud() {
   (cd ~/.dotfiles && git pull --ff-only && ./install -q)
 }
+
+alias scratch="$EDITOR $(mktemp)"
 
 # open correctly a new terminal screen and session
 alias tm="GNOME_TERMINAL_SCREEN='' gnome-terminal >/dev/null 2>&1"
