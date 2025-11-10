@@ -179,7 +179,7 @@ check_package_exists(){
 # `<12 letters of SHA1> ("subject")`. Use a oneliner to generate this format.
 # Usage:
 #   gcf COMMIT_SHA
-alias gcf="git show -s --abbrev=12 --pretty=format:'%h ("%s")'"
+alias gcf="git show -s --abbrev=12 --pretty=format:'%h (\"%s\")'"
 
 output_src_uri_correctly(){
   # Write files in a specific way out for SRC_URI.
@@ -435,7 +435,7 @@ alias a="sudo apt"
 alias au="sudo sh -c 'apt update && apt list --upgradable'"
 alias auu="sudo apt upgrade"
 alias p="sudo pacman"
-alias pu="sudo sh -c ' pacman -Syy --needed archlinux-keyring && pacman -Qu'"
+alias pu="sudo sh -c ' pacman -Syy --needed --noconfirm archlinux-keyring && pacman -Qu'"
 alias puu="sudo pacman -Su"
 
 aptremove(){
