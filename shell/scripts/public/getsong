@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 yt-dlp -x -f bestaudio \
+--remote-components ejs:github --js-runtimes node \
 --audio-format mp3 --add-metadata \
 --embed-thumbnail --no-keep-video \
 -o '%(title)s.%(ext)s' \

@@ -51,7 +51,7 @@ alias gitlo="git log --oneline"
 # see diff of staged commits
 alias gitsta="git diff --cached"
 # show inline diffs
-alias gitdi='git log --word-diff --format= -p'
+alias gitdi='git show --word-diff'
 # remove all unstaged changes in repo
 alias gitrm="git reset --hard"
 # remove last commit from log
