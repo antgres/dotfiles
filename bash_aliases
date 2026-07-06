@@ -320,7 +320,14 @@ alias lesendf="less +F"
 alias shredd="shred -v -n 1 -z -u"
 
 # distrobox
-alias enter="distrobox enter"
+_enter_into_distrobox(){
+  if [ "$(hostname -s)" = "$1" ]; then
+    echo "Already inside container $1"
+  else
+    distrobox enter $1
+  fi
+}
+alias enter="_enter_into_distrobox"
 
 _fzf_history(){
   # Print the command found in history as input back to the terminal
@@ -418,14 +425,27 @@ alias v="nvim"
 alias et="emacs -nw"
 alias n="nano"
 
-_command_stats() {
-  # Print out stats about occurrence of commands.
+cmdstats() {
+  # Print out stats about occurrence of commands. Idea from
   # https://hackaday.com/2024/12/22/optimizing-your-linux-shell-experience/
-  local AMOUNT="$1"
 
-  history | \
-  awk '{CMD[$2]++;count++;}END { for (a in CMD)print CMD[a] " " CMD[a]/count*100 "% " a;}' | \
-  grep -v "./" | column -c3 -s " " -t | sort -nr | nl | head -n $AMOUNT
+  local verbose=0
+  if [[ "$1" == "-v" || "$1" == "--verbose" ]]; then verbose=1; shift; fi
+  local amount="${1:-20}"
+
+  history | awk -v verbose="$verbose" '
+    {
+      sub(/^ *[0-9]+\*? +/, "")             # strip the history number
+      entry = verbose ? $0 : $1             # whole line or just the command
+      count[entry]++
+    }
+    END {
+      format = verbose ? "%5d  %-50s %5.1f%%\n" : "%5d  %-15s %5.1f%%\n"
+      total = NR
+      for (entry in count)
+        printf format, count[entry], entry, count[entry] * 100 / total
+    }' |
+    sort -rn | head -n "$amount"
 }
 
 ## package manager

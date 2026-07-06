@@ -1,3 +1,8 @@
+# Simple
+
+https://www.youtube.com/watch?v=xhdUA1pvUG4
+https://wiki.st.com/stm32mpu/wiki/U-Boot_-_How_to_debug
+
 
 SPL and U-Boot phase differernt because [2]
 

@@ -45,13 +45,14 @@ set regexp
 ## Bind undo key
 bind ^Z undo main
 
-bind ^L "{execute}|lltrs {enter}" main
-
 ## set spellchecker as the variable and as a keyboard shortcut
 ##	https://forums.bunsenlabs.org/viewtopic.php?id=1731
 ## Use ltrs (rust-languagetool) for checking
-# set speller "aspell -x -c"
+#set speller "aspell -x -c"
 set speller "hunspell -x -c"
-# set speller "lltrs"
+#set speller "/home/dalo/.rootbin/harper/harper-fix"
+
+#set speller "llm-fix"
+
 unbind ^S main
 bind ^C speller main

@@ -2,26 +2,30 @@
 
 ## Execute a single binary for another target architecture on the fly via binfmt
 
-TL;DR: See https://animeshz.github.io/site/blogs/binfmt.html for more
-information.
+TL;DR: See
 
-1. Install binfmt-support
+- https://animeshz.github.io/site/blogs/binfmt.html or
+- https://cefboud.com/posts/qemu-virtualzation-docker-multi-build/#qemu-and-binfmt-misc-to-the-rescue
 
-See `https://wiki.debian.org/QemuUserEmulation` for that.
+for more information.
+
+### 1. Install binfmt-support
+
+See https://wiki.debian.org/QemuUserEmulation for that.
 
 Via `update-binfmts --display` one can see the (enabled) entries and used
 interpreter per architecture.
 
-2. Build the app with new target architecture
+### 2. Build the app with the new target architecture
 
-For this example the follwoing target and app were choosen:
+For this example the following target and app were chosen:
 
 - Example architecture: ppc64
 - Example application: imx-cst
 
-**Note:** All generic QEMU architectures can be seen here
-`https://downloads.yoctoproject.org/releases/yocto/yocto-5.0.3/machines/qemu/`.
-At the time of writting they are as follows:
+**Note:** All generic QEMU architectures can be seen here:
+https://downloads.yoctoproject.org/releases/yocto/yocto-5.0.3/machines/qemu/
+At the time of writing the following architectures are available:
 
 - qemuarm
 - qemuarm64
@@ -32,40 +36,47 @@ At the time of writting they are as follows:
 - qemux86
 - qemux86-64
 
-The recipe can then be build:
+The recipe can then be built via:
 
 ```
-# conf/local.conf - Set MACHINE to weak assignemnt
-$ sed -n -i '/MACHINE/ s#=#?=#' conf/local.conf
+# conf/local.conf - Set MACHINE to weak assignment
+$ sed -i -E 's/^(MACHINE[[:space:]]*)=/\1?=/' conf/local.conf
 $ MACHINE="qemuppc64" bitbake imx-cst
 ```
+
+**Note:** Passing `MACHINE` via the environment only works because it is part
+of BitBake's default `BB_ENV_PASSTHROUGH_ADDITIONS`; arbitrary environment
+variables are not passed through to BitBake.
 
 The needed tools, toolchains and packages will be downloaded and compiled
 automagically.
 
-3. Run the target
+### 3. Run the target
+
+All paths below are relative to the build directory.
 
 Depending on how the recipe was built there are two ways to run it.
 
-3.1. Static libraries
+#### 3.1. Static libraries
 
 If it is a static app, one can just run it as usual (binfmt does all the magic
 behind the curtain).
 
 ```
-$ tmp/work/ppc64p9le-ifmlinux-linux/imx-cst/3.4.0-r0/git/code/obj.linux64/cst --help
+$ tmp/work/ppc64p9le-linux/imx-cst/3.4.0-r0/git/code/obj.linux64/cst --help
 ```
 
-3.2. Shared libraries
+#### 3.2. Shared libraries
 
 For application specific shared libraries we need to tell QEMU where to find
-them. It's easier to work here with the QEMU specific machine binary as with
-automagically conversion of binfmt.
+them. There are two alternative approaches: configure the binfmt wrapper so
+that transparent execution keeps working (A), or invoke the QEMU user binary
+directly (B).
 
 Via `file` we check out again what kind of bin we produced.
 
 ```
-$ file tmp/work/ppc64p9le-ifmlinux-linux/imx-cst/3.4.0-r0/git/code/obj.linux64/cst
+$ file tmp/work/ppc64p9le-linux/imx-cst/3.4.0-r0/git/code/obj.linux64/cst
 ELF 64-bit LSB executable, 64-bit PowerPC or cisco 7500, OpenPOWER ELF V2 ABI,
 version 1 (SYSV), dynamically linked, interpreter /lib64/ld64.so.2,
 BuildID[sha1]=a48ed980e6d8e42370168d8e7b106bfeaecde0b8, for GNU/Linux 3.10.0,
@@ -92,53 +103,70 @@ $ readlink -f /usr/libexec/qemu-binfmt/ppc64le-binfmt-P
 /usr/bin/qemu-ppc64le-static
 ```
 
-The last thing we need is to point QEMU to the targets architecture shared
-glibc libraries as described in
-`https://wiki.debian.org/QemuUserEmulation#Point_QEMU_to_the_target_linux_loader`.
-Yocto is very nice and already build them for us.
+The last thing we need is to point QEMU to the target's shared libraries.
+Yocto is very nice and already built them for us: the `recipe-sysroot` of the
+recipe contains glibc as well as the app's library dependencies.
 
-**Note:** If Yocto did not build them there are also via `dpkg-cross`, in this
-example via the package `libc6-ppc64-powerpc-cross`.
+**Note:** If Yocto did not build them we can build them via `dpkg-cross`, in
+this example via the package `libc6-ppc64-powerpc-cross`.
+
+**Approach A: Configure the binfmt wrapper.** The Debian wrapper
+(`/usr/libexec/qemu-binfmt/*-binfmt-P`) reads `/etc/qemu-binfmt.conf`, as
+described in
+https://wiki.debian.org/QemuUserEmulation#Point_QEMU_to_the_target_linux_loader.
 
 ```
-sudo touch /etc/qemu-binfmt.conf
-echo "EXTRA_OPTS=\"-L $PWD/build/tmp/work/ppc64p9le-ifmlinux-linux/glibc/2.35-r0/image\"" >> /etc/qemu-binfmt.conf
+echo "EXTRA_OPTS=\"-L $PWD/tmp/work/ppc64p9le-linux/imx-cst/3.4.0-r0/recipe-sysroot\"" \
+  | sudo tee -a /etc/qemu-binfmt.conf
 ```
 
-Finally, we can try to execute the binary. Use `-L` to point to the shared
-libraries the executable needs additionally.
+**Note:** `$PWD` is expanded when the line is written — run this from the
+build directory (or use an absolute path). The config only affects executions
+going through the binfmt wrapper, not direct QEMU invocations.
 
-**Note:** If you need additional Parameters to be included, use `-E var=value`
-(QEMU_SET_ENV) flag.
+Afterwards the binary can be executed transparently again, as in the static
+case.
 
-**Note:** One can also append the path of the shared glibc libraries directly
-with `qemu-ppc64le-static -L path/glibc -L path/imx-cst cst`.
+**Approach B: Invoke QEMU directly.** Use `-L` to point QEMU to the shared
+libraries the executable needs. `/etc/qemu-binfmt.conf` is not needed in this
+case.
+
+**Note:** If you need additional parameters to be included, use `-E var=value`
+(QEMU_SET_ENV) flag, e.g. `-E LD_LIBRARY_PATH=/path/to/extra/libs` for further
+library paths.
+
+**Note:** `-L` can only be given once (the last one wins) and must point to
+where the dynamic linker (`ld.so`) lives — hence the `recipe-sysroot`. For
+additional library paths use `-E LD_LIBRARY_PATH=path1:path2` instead.
 
 ```
 qemu-ppc64le-static \
-  -L tmp/work/ppc64p9le-ifmlinux-linux/imx-cst/3.4.0-r0/recipe-sysroot \
-  tmp/work/ppc64p9le-ifmlinux-linux/imx-cst/3.4.0-r0/git/code/obj.linux64/cst --help
+  -L tmp/work/ppc64p9le-linux/imx-cst/3.4.0-r0/recipe-sysroot \
+  tmp/work/ppc64p9le-linux/imx-cst/3.4.0-r0/git/code/obj.linux64/cst --help
 ```
 
 ## Chroot into a rootfs of another target architecture
 
+A small script to demonstrate and automate it could be:
 
+```sh
+#!/bin/sh
+# https://wiki.debian.org/Arm64Qemu#Use_Qemu_user_mode
+# https://wiki.debian.org/RaspberryPi/qemu-user-static
 
-```
-    # https://wiki.debian.org/Arm64Qemu#Use_Qemu_user_mode
-    # https://wiki.debian.org/RaspberryPi/qemu-user-static
+# Requires:
+#   sudo apt install qemu-user-static
 
-    ROOTFS_PATH="/home/dalo/Documents/ifm-projects/distro-yocto/build/tmp/work/ifm_imx8mn_vhip4_evalboard-ifmlinux-linux/core-image-minimal-production-vhip4-evalboard/1.0-r0/rootfs/usr/bin"
+ROOTFS_PATH="/path/to/core-image-minimal/1.0-r0/rootfs"
 
-    sudo apt install qemu-user-static
+# Pick the QEMU user binary matching the *target* rootfs architecture
+# (NOT the host architecture), e.g. by inspecting a binary inside it:
+#   file "${ROOTFS_PATH}/bin/busybox"
+# qemu-arm-static for 32-bit ARM, qemu-aarch64-static for arm64, ...
+QEMU_BIN="qemu-aarch64-static"
 
-    # depending on the architecure use a different entry point
-    if [ "$(getconf LONG_BIT)" == "64" ]; then
-        ARCHITECTURE="qemu-aarch64-static"
-    else
-        ARCHITECTURE="qemu-user-static"
-    fi
+cp "$(which "${QEMU_BIN}")" "${ROOTFS_PATH}/usr/bin/"
 
-    cp $(which ${ARCHITECTURE}) ${ROOTFS_PATH}
-    sudo chroot ${ROOTFS_PATH} /bin/bash
+# core-image-minimal ships BusyBox, so use /bin/sh (bash is not available)
+sudo chroot "${ROOTFS_PATH}" /bin/sh
 ```

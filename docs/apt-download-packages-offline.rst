@@ -1,8 +1,15 @@
+# Download source tarball from package
 
+To download the source package itself via a package manager like apt the
+following command can be used
 
 ::
 
    apt-get download htop
+
+If the package has package dependencies the following command can be used to
+see the dependencies and fetch them accordingly:
+
 
 ::
 
@@ -10,6 +17,9 @@
 
 For different architectures
 ---------------------------
+
+If the target system has a different architecture the source package can be
+fetch as follow:
 
 ::
 

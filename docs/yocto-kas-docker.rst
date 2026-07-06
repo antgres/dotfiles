@@ -1,9 +1,7 @@
 Build kas in a docker container
 ---------------------------------
 
-# kas-container
-
-For testing purposes the image can either be build locally via
+For testing purposes the image can either be build and run locally via
 
 ```
 # build image with name mytestname
@@ -19,7 +17,8 @@ To test out the new image with a kas build (and use ssh inside the container to
 e.g. clone repositories) `ssh-agent` needs to be activated and needs to have
 the correct keys loaded.
 
-For example with the following commands:
+With the following command one can check `ssh-agent` and check for the loaded
+keys:
 
 ```
 # Check if ssh-agent is running
@@ -36,9 +35,13 @@ If that is done use the following command to run a kas command inside the newly
 created image (else as default ghcr.io/siemens/kas/kas:latest will be used)
 
 ```
+# Populate environment variables for kas
+export GITCONFIG_FILE="~/.gitconfig"
+export DL_DIR="/path/to/dl-dir"
+
 # Note: Easier to just checkout the layers before using it with the container
-GITCONFIG_FILE="~/.gitconfig" kas checkout kas.yml
-KAS_CONTAINER_IMAGE=mytestname kas-container --ssh-agent shell kas.build.yml
+kas checkout kas.yml
+KAS_CONTAINER_IMAGE=mytestname kas-container --ssh-agent --ssh-dir ~/.ssh/ shell kas.build.yml
 ```
 
 **Note:**: The `kas-container` documentation can be [seen
@@ -47,16 +50,27 @@ here](https://kas.readthedocs.io/en/latest/userguide/kas-container.html)
 **Note:** All available environemnt flags can be [seen
 here](https://kas.readthedocs.io/en/latest/command-line.html#environment-variables).
 
-# Manually
+Manually
+--------
 
 Sometimes it is easier to just build everything from scratch.
 
 ```
-# check out if keys available in container
-docker run -it --user root  -v "$SSH_AUTH_SOCK:$SSH_AUTH_SOCK" -e SSH_AUTH_SOCK=$SSH_AUTH_SOCK -v $PWD:/builder -v ~/.gitconfig:/builder/gitconfig -t mytestname ssh-add -l
+# Check out if keys available in container
+docker run -it \
+  --user root  \
+  -v "$SSH_AUTH_SOCK:$SSH_AUTH_SOCK" -e SSH_AUTH_SOCK=$SSH_AUTH_SOCK \
+  -v $PWD:/builder \
+  -v ~/.gitconfig:/builder/gitconfig \
+  -t mytestname ssh-add -l
 
 # go into container as root
-docker run -it --user root  -v "$SSH_AUTH_SOCK:$SSH_AUTH_SOCK" -e SSH_AUTH_SOCK=$SSH_AUTH_SOCK -v $PWD:/builder -v ~/.gitconfig:/builder/gitconfig -t mytestname bash
+docker run -it \
+  --user root  \
+  -v "$SSH_AUTH_SOCK:$SSH_AUTH_SOCK" -e SSH_AUTH_SOCK=$SSH_AUTH_SOCK \
+  -v $PWD:/builder \
+  -v ~/.gitconfig:/builder/gitconfig \
+  -t mytestname bash
 
 # create known_hosts for later
 ssh -T git@github.com # or other server

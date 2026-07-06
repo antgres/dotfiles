@@ -4,7 +4,7 @@
 # usage: ex <file>
 
 if [ ! -f "$1" ] ; then
-    printf 'ERROR:Missing file or input.\nUsage: ex <file>\n\n'
+    printf 'ERROR: Missing file or input.\nUsage: ex <file>\n\n'
     echo "Supported archives:"
     echo "    tar.bz2, tar.gz, tar.xz, bz2, rar, gz, tar, tbz2, tgz, zip, Z, 7z"
     exit 1

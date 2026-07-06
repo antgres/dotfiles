@@ -175,8 +175,8 @@ trusted Certificate Authority (CA), validating the authenticity of the
 certificate. This is called a certificate chain. [F5] [F6]
 
 
-       Bundes-             D-TRUST             ifm               VHIP4
-     netzagentur            GmbH               GmbH            Evalboard
+       Bundes-             D-TRUST           company           my-specific
+     netzagentur            GmbH              GmbH               device
     +----------+ signs +------------+ signs +-------+ signs +-------------+
     |   Root   |---+   |Intermidiate|---+   |Issuing|---+   |   Device    |
     |    CA    |   +-->|     CA     |   +-->|  CA   |   +-->| Certificate |
@@ -186,11 +186,11 @@ The certificate includes the public key and information about it, information
 about the identity of its owner and the digital signature of an entity that has
 verified the certificate contents. [F5]
 
-            ifm Certificate   | Example Categories
+          company Certificate | Example Categories
          +  +--------------+  +------------------------
          |  |      DE      |  | Country
-    Meta |  |  Martin Buck |  | Common Name
-    data |  |      ifm     |  | Organization
+    Meta |  |  Max Muster  |  | Common Name
+    data |  |  my-company  |  | Organization
          |  | D-Trust GmbH |  | Verified by
          |  |  2030-07-04  |  | Not valid after
          +  +--------------+  |

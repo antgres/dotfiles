@@ -24,7 +24,7 @@ Terms explained
 
   A BSP may also include any additional user space software and peripheral
   firmware needed to fully enable and utilize all the features of the hardware.
-  By convention, BSP layer names start with the meta- prefix, followed by the
+  By convention, BSP layer names start with the `meta-` prefix, followed by the
   machine's name.
 
   Locating the best BSP for your target device is the first step toward
@@ -37,8 +37,8 @@ Terms explained
   An example can be features, C library implementations, choice of package
   manager, package format (rpm, deb or ipk), init system, and so on.
 
-Folder structure
-----------------
+Directoryo structure
+--------------------
 
 The build directory contains the following interesting folders in *./tmp*:
 

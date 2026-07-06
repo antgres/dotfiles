@@ -2,6 +2,7 @@
     link:
       create: true
       relink: true
+      exclude: ['**/*.test']
 
 - clean: ['~', '~/.config']
 
@@ -14,7 +15,6 @@
     ~/.config/i3status:
     ~/.config/lazygit:
     ~/.config/newsboat:
-    ~/.config/nvim:
     ~/.config/tmux:
     ~/.gitconfig:
     ~/.nanorc:

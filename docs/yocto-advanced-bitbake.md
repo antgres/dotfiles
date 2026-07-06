@@ -76,7 +76,7 @@ poky/scripts/contrib/graph-tool find-paths /path/to/build/task-depends.dot \
 See [DBG3] for more information.
 
 Sometimes you need to know the value of a variable as a result of BitBake’s
-parsing step because perhaps an attempt to modify a variable e.g. via an
+parsing step because, perhaps, an attempt to modify a variable e.g. via an
 override did not work out as expected.
 
 The command `bitbake -e RECIPE | less -` displays
